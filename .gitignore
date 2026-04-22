@@ -1,0 +1,9 @@
+node_modules/
+.env
+.env.local
+functions/lib/
+web/.next/
+web/out/
+*.log
+.firebase/
+service-account.json
