@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { ALL_CATEGORIES, CATEGORY_CONFIG, Category, DiarioRecord } from '@/lib/types';
+import { useCustomCategories } from '@/lib/custom-categories';
 import { RecordCard } from './RecordCard';
 
 function groupByDate(records: DiarioRecord[]): [string, DiarioRecord[]][] {
@@ -29,7 +30,8 @@ interface TimelinePanelProps {
 }
 
 export function TimelinePanel({ records }: TimelinePanelProps) {
-  const [activeFilter, setActiveFilter] = useState<Category | null>(null);
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const { customCategories } = useCustomCategories();
 
   const filtered = activeFilter ? records.filter((r) => r.category === activeFilter) : records;
   const grouped = groupByDate(filtered);
@@ -58,6 +60,7 @@ export function TimelinePanel({ records }: TimelinePanelProps) {
           >
             Todos
           </button>
+          {/* Built-in category filters */}
           {ALL_CATEGORIES.map((cat) => {
             const cfg = CATEGORY_CONFIG[cat];
             const count = records.filter((r) => r.category === cat).length;
@@ -76,6 +79,27 @@ export function TimelinePanel({ records }: TimelinePanelProps) {
                 }}
               >
                 {cfg.emoji} {cfg.label.split(' ')[0]} · {count}
+              </button>
+            );
+          })}
+          {/* Custom category filters */}
+          {customCategories.map((cat) => {
+            const count = records.filter((r) => r.category === cat.id).length;
+            if (count === 0) return null;
+            const active = activeFilter === cat.id;
+            return (
+              <button
+                key={cat.id}
+                onClick={() => setActiveFilter(active ? null : cat.id)}
+                className="rounded-full px-2.5 py-1 text-[11px] font-medium transition-all"
+                style={{
+                  backgroundColor: active ? `${cat.color}20` : 'transparent',
+                  color: cat.color,
+                  border: `1px solid ${active ? cat.color + '40' : 'transparent'}`,
+                  opacity: active ? 1 : 0.6,
+                }}
+              >
+                {cat.emoji} {cat.label.split(' ')[0]} · {count}
               </button>
             );
           })}

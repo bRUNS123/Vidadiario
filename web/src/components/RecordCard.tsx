@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { doc, Timestamp, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Category, CATEGORY_CONFIG, DiarioRecord, ParsedData } from '@/lib/types';
+import { Category, DiarioRecord, ParsedData } from '@/lib/types';
+import { useCustomCategories } from '@/lib/custom-categories';
 
 function formatSummary(record: DiarioRecord): string {
   const { parsedData, category } = record;
@@ -78,8 +79,9 @@ export function RecordCard({ record, pending = false }: RecordCardProps) {
   const [approving, setApproving] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
-  const config = CATEGORY_CONFIG[record.category];
-  const editFields = getEditFields(record.category);
+  const { getCatConfig } = useCustomCategories();
+  const config = getCatConfig(record.category);
+  const editFields = getEditFields(record.category as Category);
 
   function startEdit() {
     setEditData({ ...record.parsedData });
@@ -112,9 +114,10 @@ export function RecordCard({ record, pending = false }: RecordCardProps) {
 
   return (
     <div
-      className={`rounded-xl border p-4 transition-all duration-300 ${config.bg} ${config.border} ${pending ? config.glowClass : ''} ${
+      className={`rounded-xl border p-4 transition-all duration-300 ${config.bg} ${config.border} ${pending && config.glowClass ? config.glowClass : ''} ${
         approving ? 'scale-95 opacity-0' : 'scale-100 opacity-100'
       }`}
+      style={pending && config.isCustom ? { boxShadow: `0 0 24px ${config.color}30` } : undefined}
     >
       {/* Header row */}
       <div className="flex items-start justify-between gap-3">

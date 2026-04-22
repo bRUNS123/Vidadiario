@@ -1,4 +1,4 @@
-export type Category =
+export type BuiltinCategory =
   | 'agua'
   | 'actividad'
   | 'alimentacion'
@@ -6,6 +6,9 @@ export type Category =
   | 'ocio'
   | 'agenda'
   | 'bano';
+
+/** Alias kept for convenience — custom categories are plain strings */
+export type Category = BuiltinCategory;
 
 export type Status = 'pending' | 'confirmed';
 
@@ -24,7 +27,7 @@ export interface ParsedData {
 
 export interface DiarioRecord {
   id: string;
-  category: Category;
+  category: string; // BuiltinCategory or custom category Firestore ID
   rawText: string;
   parsedData: ParsedData;
   notificar: boolean;

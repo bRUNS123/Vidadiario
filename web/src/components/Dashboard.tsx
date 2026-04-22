@@ -6,6 +6,7 @@ import { db } from '@/lib/firebase';
 import { DiarioRecord } from '@/lib/types';
 import { MOCK_CONFIRMED, MOCK_PENDING } from '@/lib/mock-data';
 import { useTheme } from '@/lib/use-theme';
+import { CustomCategoriesProvider } from '@/lib/custom-categories';
 import { InboxPanel } from './InboxPanel';
 import { TimelinePanel } from './TimelinePanel';
 import { AddRecordModal } from './AddRecordModal';
@@ -92,5 +93,13 @@ export function Dashboard() {
 
       {showModal && <AddRecordModal onClose={() => setShowModal(false)} />}
     </div>
+  );
+}
+
+export function DashboardWithProviders() {
+  return (
+    <CustomCategoriesProvider>
+      <Dashboard />
+    </CustomCategoriesProvider>
   );
 }
