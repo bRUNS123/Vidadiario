@@ -118,8 +118,9 @@ export function AddRecordModal({ onClose }: AddRecordModalProps) {
         rawText: '',
         parsedData: formData,
         notificar: selectedCategory === 'agenda' && notificar,
-        status: 'pending',
+        status: 'confirmed',
         createdAt: serverTimestamp(),
+        confirmedAt: serverTimestamp(),
       });
       onClose();
     } catch (err) {
