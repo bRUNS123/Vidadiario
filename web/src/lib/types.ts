@@ -1,4 +1,12 @@
-export type Category = 'agua' | 'actividad' | 'alimentacion' | 'medicina' | 'ocio' | 'agenda';
+export type Category =
+  | 'agua'
+  | 'actividad'
+  | 'alimentacion'
+  | 'medicina'
+  | 'ocio'
+  | 'agenda'
+  | 'bano';
+
 export type Status = 'pending' | 'confirmed';
 
 export interface ParsedData {
@@ -11,6 +19,7 @@ export interface ParsedData {
   minutos?: number;
   evento?: string;
   hora?: string;
+  tipo?: 'pis' | 'caca';
 }
 
 export interface DiarioRecord {
@@ -28,54 +37,87 @@ export interface DiarioRecord {
 
 export const CATEGORY_CONFIG: Record<
   Category,
-  { label: string; color: string; glow: string; emoji: string; bg: string; border: string }
+  {
+    label: string;
+    color: string;
+    glowClass: string;
+    emoji: string;
+    bg: string;
+    border: string;
+    labelColor: string;
+  }
 > = {
   agua: {
     label: 'Agua',
     color: '#3b82f6',
-    glow: '0 0 24px rgba(59, 130, 246, 0.25)',
+    glowClass: 'glow-agua',
     emoji: '💧',
-    bg: 'bg-blue-950/40',
-    border: 'border-blue-500/25',
+    bg: 'bg-blue-50 dark:bg-blue-950/40',
+    border: 'border-blue-200 dark:border-blue-500/25',
+    labelColor: 'text-blue-600 dark:text-blue-400',
   },
   actividad: {
     label: 'Actividad Física',
     color: '#22c55e',
-    glow: '0 0 24px rgba(34, 197, 94, 0.25)',
+    glowClass: 'glow-actividad',
     emoji: '💪',
-    bg: 'bg-green-950/40',
-    border: 'border-green-500/25',
+    bg: 'bg-green-50 dark:bg-green-950/40',
+    border: 'border-green-200 dark:border-green-500/25',
+    labelColor: 'text-green-600 dark:text-green-400',
   },
   alimentacion: {
     label: 'Alimentación',
     color: '#f97316',
-    glow: '0 0 24px rgba(249, 115, 22, 0.25)',
+    glowClass: 'glow-alimentacion',
     emoji: '🥗',
-    bg: 'bg-orange-950/40',
-    border: 'border-orange-500/25',
+    bg: 'bg-orange-50 dark:bg-orange-950/40',
+    border: 'border-orange-200 dark:border-orange-500/25',
+    labelColor: 'text-orange-600 dark:text-orange-400',
   },
   medicina: {
     label: 'Medicina',
     color: '#a855f7',
-    glow: '0 0 24px rgba(168, 85, 247, 0.25)',
+    glowClass: 'glow-medicina',
     emoji: '💊',
-    bg: 'bg-purple-950/40',
-    border: 'border-purple-500/25',
+    bg: 'bg-purple-50 dark:bg-purple-950/40',
+    border: 'border-purple-200 dark:border-purple-500/25',
+    labelColor: 'text-purple-600 dark:text-purple-400',
   },
   ocio: {
     label: 'Ocio',
     color: '#14b8a6',
-    glow: '0 0 24px rgba(20, 184, 166, 0.25)',
+    glowClass: 'glow-ocio',
     emoji: '🎮',
-    bg: 'bg-teal-950/40',
-    border: 'border-teal-500/25',
+    bg: 'bg-teal-50 dark:bg-teal-950/40',
+    border: 'border-teal-200 dark:border-teal-500/25',
+    labelColor: 'text-teal-600 dark:text-teal-400',
   },
   agenda: {
     label: 'Agenda',
     color: '#eab308',
-    glow: '0 0 24px rgba(234, 179, 8, 0.25)',
+    glowClass: 'glow-agenda',
     emoji: '📅',
-    bg: 'bg-yellow-950/40',
-    border: 'border-yellow-500/25',
+    bg: 'bg-yellow-50 dark:bg-yellow-950/40',
+    border: 'border-yellow-200 dark:border-yellow-500/25',
+    labelColor: 'text-yellow-600 dark:text-yellow-500',
+  },
+  bano: {
+    label: 'Baño',
+    color: '#d97706',
+    glowClass: 'glow-bano',
+    emoji: '🚽',
+    bg: 'bg-amber-50 dark:bg-amber-950/40',
+    border: 'border-amber-200 dark:border-amber-500/25',
+    labelColor: 'text-amber-600 dark:text-amber-400',
   },
 };
+
+export const ALL_CATEGORIES: Category[] = [
+  'agua',
+  'actividad',
+  'alimentacion',
+  'medicina',
+  'ocio',
+  'agenda',
+  'bano',
+];

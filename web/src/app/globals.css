@@ -2,24 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
-html {
-  background-color: #09090b;
-}
+/* Category glow effects — only visible in dark mode */
+.dark .glow-agua         { box-shadow: 0 0 24px rgba(59,  130, 246, 0.25); }
+.dark .glow-actividad    { box-shadow: 0 0 24px rgba(34,  197,  94, 0.25); }
+.dark .glow-alimentacion { box-shadow: 0 0 24px rgba(249, 115,  22, 0.25); }
+.dark .glow-medicina     { box-shadow: 0 0 24px rgba(168,  85, 247, 0.25); }
+.dark .glow-ocio         { box-shadow: 0 0 24px rgba(20,  184, 166, 0.25); }
+.dark .glow-agenda       { box-shadow: 0 0 24px rgba(234, 179,   8, 0.25); }
+.dark .glow-bano         { box-shadow: 0 0 24px rgba(217, 119,   6, 0.25); }
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+  scrollbar-color: rgba(128, 128, 128, 0.2) transparent;
 }
 
-*::-webkit-scrollbar {
-  width: 4px;
-}
-
-*::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-*::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.08);
-  border-radius: 2px;
-}
+*::-webkit-scrollbar        { width: 4px; }
+*::-webkit-scrollbar-track  { background: transparent; }
+*::-webkit-scrollbar-thumb  { background-color: rgba(128, 128, 128, 0.2); border-radius: 2px; }

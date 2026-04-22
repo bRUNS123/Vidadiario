@@ -3,35 +3,46 @@ import { RecordCard } from './RecordCard';
 
 interface InboxPanelProps {
   records: DiarioRecord[];
+  onAdd: () => void;
 }
 
-export function InboxPanel({ records }: InboxPanelProps) {
+export function InboxPanel({ records, onAdd }: InboxPanelProps) {
   return (
     <div className="flex w-[360px] flex-shrink-0 flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-white/5 px-5 py-4">
+      <div className="flex items-center justify-between border-b border-zinc-200 dark:border-white/5 px-5 py-4">
         <div>
-          <h2 className="text-sm font-semibold text-white">Inbox</h2>
-          <p className="mt-0.5 text-[11px] text-zinc-500">Pendientes de aprobación</p>
+          <h2 className="text-sm font-semibold text-zinc-900 dark:text-white">Inbox</h2>
+          <p className="mt-0.5 text-[11px] text-zinc-400 dark:text-zinc-500">Pendientes de aprobación</p>
         </div>
-        {records.length > 0 && (
-          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-white/10 px-1.5 text-[11px] font-medium text-zinc-300">
-            {records.length}
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {records.length > 0 && (
+            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-zinc-100 dark:bg-white/10 px-1.5 text-[11px] font-medium text-zinc-600 dark:text-zinc-300">
+              {records.length}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* List */}
       <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
         {records.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="flex flex-col items-center justify-center py-16 text-center">
             <span className="mb-3 text-4xl">📭</span>
-            <p className="text-sm text-zinc-500">Inbox vacío</p>
-            <p className="mt-1 text-[11px] text-zinc-600">Envía un mensaje desde Telegram</p>
-            <div className="mt-4 rounded-lg border border-white/5 bg-white/[0.03] px-3 py-2 text-left">
-              <p className="text-[10px] text-zinc-600">Ejemplos:</p>
-              {['+h2o 500', '+af Pesas 45', '+com Ensalada', '!cita Dentista 10:30'].map((ex) => (
-                <p key={ex} className="mt-0.5 font-mono text-[11px] text-zinc-500">
+            <p className="text-sm text-zinc-400 dark:text-zinc-500">Inbox vacío</p>
+            <p className="mt-1 text-[11px] text-zinc-300 dark:text-zinc-600">
+              Agrega desde aquí o envía un mensaje por Telegram
+            </p>
+            <button
+              onClick={onAdd}
+              className="mt-4 rounded-lg border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-white/5 px-4 py-2 text-[11px] font-medium text-zinc-600 dark:text-zinc-300 transition-colors hover:bg-zinc-100 dark:hover:bg-white/10"
+            >
+              + Agregar entrada
+            </button>
+            <div className="mt-4 rounded-lg border border-zinc-100 dark:border-white/5 bg-zinc-50 dark:bg-white/[0.03] px-3 py-2 text-left">
+              <p className="text-[10px] text-zinc-400">O desde Telegram (@midiariovidabot):</p>
+              {['+h2o 500', '+af Pesas 45', '+ban pis', '!cita Dentista 10:30'].map((ex) => (
+                <p key={ex} className="mt-0.5 font-mono text-[11px] text-zinc-400 dark:text-zinc-500">
                   {ex}
                 </p>
               ))}

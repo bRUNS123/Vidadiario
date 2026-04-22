@@ -11,8 +11,16 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es">
-      <body className={`${inter.className} bg-[#09090b] text-white antialiased`}>
+    <html lang="es" className="dark">
+      <head>
+        {/* Prevent theme flash: reads localStorage before first paint */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var t=localStorage.getItem('diario-theme');document.documentElement.classList.toggle('dark',t!=='light');})();`,
+          }}
+        />
+      </head>
+      <body className={`${inter.className} bg-zinc-50 dark:bg-[#09090b] text-zinc-900 dark:text-white antialiased`}>
         {children}
       </body>
     </html>

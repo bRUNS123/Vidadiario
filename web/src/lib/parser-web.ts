@@ -1,4 +1,4 @@
-export type Category = 'agua' | 'actividad' | 'alimentacion' | 'medicina' | 'ocio' | 'agenda';
+export type Category = 'agua' | 'actividad' | 'alimentacion' | 'medicina' | 'ocio' | 'agenda' | 'bano';
 
 export interface ParsedData {
   nombre?: string;
@@ -8,6 +8,7 @@ export interface ParsedData {
   dosis?: string;
   actividad?: string;
   minutos?: number;
+  tipo?: 'pis' | 'caca';
   evento?: string;
   hora?: string;
 }
@@ -58,6 +59,11 @@ export function parseMessage(
     case 'com':
       category = 'alimentacion';
       parsedData = { descripcion: args.join(' ') || undefined };
+      break;
+
+    case 'ban':
+      category = 'bano';
+      parsedData = { tipo: args[0]?.toLowerCase() === 'caca' ? 'caca' : 'pis' };
       break;
 
     case 'med':
