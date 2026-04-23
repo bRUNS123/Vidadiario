@@ -196,17 +196,24 @@ export function RecordCard({ record, pending = false }: RecordCardProps) {
 
   return (
     <div
-      className={`group rounded-xl border p-4 transition-all duration-300 ${config.bg} ${config.border} ${pending && config.glowClass ? config.glowClass : ''} ${
+      className={`group rounded-xl border p-4 transition-all duration-300 ${config.isCustom ? '' : config.bg} ${config.isCustom ? '' : config.border} ${pending && config.glowClass ? config.glowClass : ''} ${
         approving ? 'scale-95 opacity-0' : 'scale-100 opacity-100'
       }`}
-      style={pending && config.isCustom ? { boxShadow: `0 0 24px ${config.color}30` } : undefined}
+      style={config.isCustom ? {
+        backgroundColor: `${config.color}15`,
+        borderColor: `${config.color}35`,
+        ...(pending ? { boxShadow: `0 0 24px ${config.color}30` } : {}),
+      } : undefined}
     >
       {/* Header row */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-start gap-3">
           <span className="flex-shrink-0 text-xl">{config.emoji}</span>
           <div className="min-w-0">
-            <p className={`text-[10px] font-semibold uppercase tracking-widest ${config.labelColor}`}>
+            <p
+              className={`text-[10px] font-semibold uppercase tracking-widest ${config.isCustom ? '' : config.labelColor}`}
+              style={config.isCustom ? { color: config.color } : undefined}
+            >
               {config.label}
             </p>
             <p className="mt-0.5 truncate text-sm font-medium text-zinc-900 dark:text-white">
