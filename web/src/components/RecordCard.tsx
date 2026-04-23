@@ -50,34 +50,35 @@ type EditField = {
   key: keyof ParsedData;
   label: string;
   type: 'text' | 'number' | 'toggle';
+  placeholder?: string;
   options?: { value: string; label: string; emoji: string }[];
 };
 
 function getEditFields(category: Category): EditField[] {
   switch (category) {
     case 'agua':
-      return [{ key: 'cantidad', label: 'ml', type: 'number' }];
+      return [{ key: 'cantidad', label: 'ml', type: 'number', placeholder: '500' }];
     case 'actividad':
       return [
-        { key: 'nombre', label: 'Ejercicio', type: 'text' },
-        { key: 'minutos', label: 'Duración (min)', type: 'number' },
+        { key: 'nombre', label: 'Ejercicio', type: 'text', placeholder: 'Pesas, Correr...' },
+        { key: 'minutos', label: 'Duración (min)', type: 'number', placeholder: '45' },
       ];
     case 'alimentacion':
-      return [{ key: 'descripcion', label: 'Descripción', type: 'text' }];
+      return [{ key: 'descripcion', label: 'Descripción', type: 'text', placeholder: 'Ensalada, Pizza...' }];
     case 'medicina':
       return [
-        { key: 'nombre', label: 'Nombre', type: 'text' },
-        { key: 'dosis', label: 'Dosis', type: 'text' },
+        { key: 'nombre', label: 'Nombre', type: 'text', placeholder: 'Creatina...' },
+        { key: 'dosis', label: 'Dosis', type: 'text', placeholder: '5g, 10mg...' },
       ];
     case 'ocio':
       return [
-        { key: 'actividad', label: 'Actividad', type: 'text' },
-        { key: 'minutos', label: 'Duración (min)', type: 'number' },
+        { key: 'actividad', label: 'Actividad', type: 'text', placeholder: 'Series, Juegos...' },
+        { key: 'minutos', label: 'Duración (min)', type: 'number', placeholder: '60' },
       ];
     case 'agenda':
       return [
-        { key: 'evento', label: 'Evento', type: 'text' },
-        { key: 'hora', label: 'Hora (HH:MM)', type: 'text' },
+        { key: 'evento', label: 'Evento', type: 'text', placeholder: 'Dentista...' },
+        { key: 'hora', label: 'Hora', type: 'text', placeholder: '10:30' },
       ];
     case 'bano':
       return [{
@@ -89,8 +90,8 @@ function getEditFields(category: Category): EditField[] {
       }];
     default:
       return [
-        { key: 'descripcion', label: 'Descripción', type: 'text' },
-        { key: 'duracion', label: 'Duración (min)', type: 'number' },
+        { key: 'descripcion', label: 'Descripción', type: 'text', placeholder: 'Escribe algo...' },
+        { key: 'duracion', label: 'Duración (min)', type: 'number', placeholder: '30' },
       ];
   }
 }
@@ -275,6 +276,7 @@ export function RecordCard({ record, pending = false }: RecordCardProps) {
                 </label>
                 <input
                   type={field.type}
+                  placeholder={field.placeholder}
                   value={String(editData[field.key] ?? '')}
                   onChange={(e) =>
                     setEditData((p) => ({
@@ -282,7 +284,7 @@ export function RecordCard({ record, pending = false }: RecordCardProps) {
                       [field.key]: field.type === 'number' ? Number(e.target.value) : e.target.value,
                     }))
                   }
-                  className="flex-1 rounded-md border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-white/5 px-2 py-1 text-sm text-zinc-900 dark:text-white outline-none transition-colors focus:border-zinc-400 dark:focus:border-white/25"
+                  className="flex-1 rounded-lg border border-zinc-200 dark:border-white/15 bg-white dark:bg-zinc-800 px-2.5 py-1.5 text-sm text-zinc-900 dark:text-white outline-none transition-colors placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:border-zinc-400 dark:focus:border-white/30"
                 />
               </div>
             )
