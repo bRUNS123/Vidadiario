@@ -31,12 +31,19 @@ function formatSummary(record: DiarioRecord): string {
   }
 }
 
-function formatTime(ts?: { seconds: number }): string {
+function formatTime(ts?: { seconds: number }, durationMins?: number): string {
   if (!ts) return '';
-  return new Date(ts.seconds * 1000).toLocaleTimeString('es', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  const start = new Date(ts.seconds * 1000);
+  const fmt = (d: Date) => d.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
+  if (durationMins) {
+    const end = new Date(ts.seconds * 1000 + durationMins * 60000);
+    return `${fmt(start)} – ${fmt(end)}`;
+  }
+  return fmt(start);
+}
+
+function getEffectiveDuration(record: DiarioRecord): number | undefined {
+  return record.parsedData.minutos ?? record.parsedData.duracion;
 }
 
 type EditField = {
@@ -81,7 +88,10 @@ function getEditFields(category: Category): EditField[] {
         ],
       }];
     default:
-      return [{ key: 'descripcion', label: 'Descripción', type: 'text' }];
+      return [
+        { key: 'descripcion', label: 'Descripción', type: 'text' },
+        { key: 'duracion', label: 'Duración (min)', type: 'number' },
+      ];
   }
 }
 
@@ -167,7 +177,10 @@ export function RecordCard({ record, pending = false }: RecordCardProps) {
         </div>
         <div className="flex flex-shrink-0 items-center gap-1.5">
           <span className="text-[11px] text-zinc-400 dark:text-zinc-600">
-            {formatTime(pending ? record.createdAt : (record.confirmedAt ?? record.createdAt))}
+            {formatTime(
+              pending ? record.createdAt : (record.confirmedAt ?? record.createdAt),
+              getEffectiveDuration(record)
+            )}
           </span>
           {record.notificar && (
             <span className="rounded-full bg-yellow-100 dark:bg-yellow-500/15 px-1.5 py-0.5 text-[10px] font-medium text-yellow-700 dark:text-yellow-500">

@@ -20,6 +20,7 @@ export interface ParsedData {
   dosis?: string;
   actividad?: string;
   minutos?: number;
+  duracion?: number;   // minutos de duración para categorías sin campo propio
   evento?: string;
   hora?: string;
   tipo?: 'pis' | 'caca';

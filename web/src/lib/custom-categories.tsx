@@ -10,6 +10,7 @@ export interface CustomCategory {
   label: string;
   emoji: string;
   color: string;
+  hasDuration: boolean;
 }
 
 export interface CatConfig {
@@ -36,7 +37,7 @@ const FALLBACK: CatConfig = {
 
 interface ContextValue {
   customCategories: CustomCategory[];
-  createCategory: (label: string, emoji: string, color: string) => Promise<string>;
+  createCategory: (label: string, emoji: string, color: string, hasDuration: boolean) => Promise<string>;
   getCatConfig: (category: string) => CatConfig;
 }
 
@@ -56,11 +57,12 @@ export function CustomCategoriesProvider({ children }: { children: ReactNode }) 
     return unsub;
   }, []);
 
-  async function createCategory(label: string, emoji: string, color: string): Promise<string> {
+  async function createCategory(label: string, emoji: string, color: string, hasDuration: boolean): Promise<string> {
     const ref = await addDoc(collection(db, 'categorias'), {
       label,
       emoji,
       color,
+      hasDuration,
       createdAt: serverTimestamp(),
     });
     return ref.id;

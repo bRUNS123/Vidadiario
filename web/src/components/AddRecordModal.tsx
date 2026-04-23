@@ -63,6 +63,18 @@ const BUILTIN_DEFAULTS: Record<string, Partial<ParsedData>> = {
   bano: { tipo: 'pis' },
 };
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function localNow(): string {
+  const d = new Date();
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+}
+
+// Categories where duration is irrelevant (instant events)
+const NO_DURATION = ['agua', 'medicina', 'bano'];
+// Categories that already have their own duration field (minutos)
+const HAS_OWN_DURATION = ['actividad', 'ocio'];
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 type Step = 'select' | 'fields' | 'create';
@@ -80,20 +92,24 @@ export function AddRecordModal({ onClose }: AddRecordModalProps) {
   const [notificar, setNotificar] = useState(false);
   const [saving, setSaving] = useState(false);
   const [confirmDeleteCat, setConfirmDeleteCat] = useState<string | null>(null);
-  const [recordDate, setRecordDate] = useState(() =>
-    new Date().toISOString().slice(0, 16) // "YYYY-MM-DDTHH:mm"
-  );
+  const [recordDate, setRecordDate] = useState(localNow);
+  const [hasDuration, setHasDuration] = useState(false);
+  const [durationMins, setDurationMins] = useState('');
 
   // New category form state
   const [newEmoji, setNewEmoji] = useState('📝');
   const [newLabel, setNewLabel] = useState('');
   const [newColor, setNewColor] = useState('#6b7280');
+  const [newHasDuration, setNewHasDuration] = useState(false);
   const [creating, setCreating] = useState(false);
 
   function pickCategory(catId: string) {
     setSelectedCategory(catId);
     setFormData(BUILTIN_DEFAULTS[catId] ?? {});
     setNotificar(false);
+    setHasDuration(false);
+    setDurationMins('');
+    setRecordDate(localNow());
     setStep('fields');
   }
 
@@ -116,7 +132,7 @@ export function AddRecordModal({ onClose }: AddRecordModalProps) {
     if (!newLabel.trim()) return;
     setCreating(true);
     try {
-      const id = await createCategory(newLabel.trim(), newEmoji, newColor);
+      const id = await createCategory(newLabel.trim(), newEmoji, newColor, newHasDuration);
       pickCategory(id);
     } catch (err) {
       console.error(err);
@@ -129,10 +145,11 @@ export function AddRecordModal({ onClose }: AddRecordModalProps) {
     setSaving(true);
     try {
       const ts = Timestamp.fromDate(new Date(recordDate));
+      const extraParsed = hasDuration && durationMins ? { duracion: Number(durationMins) } : {};
       await addDoc(collection(db, 'registros'), {
         category: selectedCategory,
         rawText: '',
-        parsedData: formData,
+        parsedData: { ...formData, ...extraParsed },
         notificar: selectedCategory === 'agenda' && notificar,
         status: 'confirmed',
         createdAt: ts,
@@ -296,6 +313,21 @@ export function AddRecordModal({ onClose }: AddRecordModalProps) {
                 </div>
               </div>
 
+              {/* Duration option */}
+              <label className="flex cursor-pointer items-center justify-between rounded-xl border border-zinc-100 dark:border-white/8 bg-zinc-50 dark:bg-white/5 px-3 py-2.5">
+                <div>
+                  <p className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Permite duración</p>
+                  <p className="text-[10px] text-zinc-400">Ej: sesión de 30 min</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setNewHasDuration(!newHasDuration)}
+                  className={`relative h-5 w-9 rounded-full transition-colors ${newHasDuration ? 'bg-zinc-700 dark:bg-white/40' : 'bg-zinc-200 dark:bg-white/10'}`}
+                >
+                  <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${newHasDuration ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                </button>
+              </label>
+
               {/* Preview */}
               <div
                 className="flex items-center gap-2 rounded-xl border px-3 py-2"
@@ -370,6 +402,50 @@ export function AddRecordModal({ onClose }: AddRecordModalProps) {
                 </label>
               )}
 
+              {/* Duration toggle — only for categories that support it */}
+              {selectedCategory && (() => {
+                const isCustom = !NO_DURATION.includes(selectedCategory) && !HAS_OWN_DURATION.includes(selectedCategory) && !(selectedCategory in CATEGORY_CONFIG);
+                const customCat = customCategories.find(c => c.id === selectedCategory);
+                const showDur = !NO_DURATION.includes(selectedCategory) &&
+                  !HAS_OWN_DURATION.includes(selectedCategory) &&
+                  (isCustom ? customCat?.hasDuration : true);
+                return showDur;
+              })() && (
+                  <div className="rounded-xl border border-zinc-100 dark:border-white/8 bg-zinc-50 dark:bg-white/5 px-3 py-2.5">
+                    <label className="flex cursor-pointer items-center justify-between">
+                      <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+                        Duración
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => { setHasDuration(!hasDuration); setDurationMins(''); }}
+                        className={`relative h-5 w-9 rounded-full transition-colors ${hasDuration ? 'bg-zinc-700 dark:bg-white/40' : 'bg-zinc-200 dark:bg-white/10'}`}
+                      >
+                        <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${hasDuration ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                      </button>
+                    </label>
+                    {hasDuration && (
+                      <div className="mt-2 flex items-center gap-2">
+                        <input
+                          type="number"
+                          min="1"
+                          placeholder="30"
+                          value={durationMins}
+                          onChange={(e) => setDurationMins(e.target.value)}
+                          className="w-20 rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-white/5 px-2 py-1 text-sm text-zinc-900 dark:text-white outline-none focus:border-zinc-400 dark:focus:border-white/25"
+                        />
+                        <span className="text-[11px] text-zinc-400">minutos</span>
+                        {durationMins && cfg && (
+                          <span className="ml-auto text-[11px] font-medium" style={{ color: cfg.color }}>
+                            → {new Date(new Date(recordDate).getTime() + Number(durationMins) * 60000)
+                                .toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
               {/* Date/time picker */}
               <div className="rounded-xl border border-zinc-100 dark:border-white/8 bg-zinc-50 dark:bg-white/5 px-3 py-2.5">
                 <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
@@ -378,7 +454,7 @@ export function AddRecordModal({ onClose }: AddRecordModalProps) {
                 <input
                   type="datetime-local"
                   value={recordDate}
-                  max={new Date().toISOString().slice(0, 16)}
+                  max={localNow()}
                   onChange={(e) => setRecordDate(e.target.value)}
                   className="w-full bg-transparent text-sm text-zinc-900 dark:text-white outline-none [color-scheme:light] dark:[color-scheme:dark]"
                 />
