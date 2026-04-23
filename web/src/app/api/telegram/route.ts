@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { parseMessage } from '@/lib/parser-web';
 
@@ -35,17 +35,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true });
     }
 
-    const parsed = parseMessage(
+    const parsed = await parseMessage(
       message.text,
+      {
+        getAliases: async () => {
+          const snapshot = await getDocs(collection(db, 'aliasMappings'));
+          return snapshot.docs.map(doc => doc.data());
+        }
+      },
       message.from ? String(message.from.id) : undefined,
       message.message_id
     );
 
     if (!parsed) {
-      await sendMessage(
-        message.chat.id,
-        '⚠️ Formato no reconocido.\n\nEjemplos:\n+h2o 500\n+af Pesas 45\n+com Ensalada César\n+med Creatina 5g\n+ocio Series 60\n!cita Dentista 10:30'
-      );
+      await sendMessage(message.chat.id, '⚠️ No se pudo procesar el mensaje.');
       return NextResponse.json({ ok: true });
     }
 
