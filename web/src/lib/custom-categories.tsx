@@ -74,18 +74,24 @@ export function CustomCategoriesProvider({ children }: { children: ReactNode }) 
     const catLower = category.toLowerCase();
     
     // 1. Check built-in categories and aliases
-    const aliases: Record<string, BuiltinCategory> = {
-      'ducha': 'bano',
-      'tina': 'bano',
-      'asiento': 'bano',
-      'baño': 'bano',
+    const aliases: Record<string, { cat: BuiltinCategory, label: string, emoji: string }> = {
+      'ducha': { cat: 'bano', label: 'Ducha', emoji: '🚿' },
+      'tina': { cat: 'bano', label: 'Baño Tina', emoji: '🛁' },
+      'asiento': { cat: 'bano', label: 'Ducha Asiento', emoji: '🪑' },
+      'baño': { cat: 'bano', label: 'Necesidades', emoji: '🚽' },
     };
 
-    const targetCat = aliases[catLower] || catLower;
+    const alias = aliases[catLower];
+    const targetCat = alias ? alias.cat : catLower;
 
     if (targetCat in CATEGORY_CONFIG) {
       const cfg = CATEGORY_CONFIG[targetCat as BuiltinCategory];
-      return { ...cfg, isCustom: false };
+      return { 
+        ...cfg, 
+        label: alias ? alias.label : cfg.label,
+        emoji: alias ? alias.emoji : cfg.emoji,
+        isCustom: false 
+      };
     }
 
     // 2. Check custom categories by ID or Label (case-insensitive)

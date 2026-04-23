@@ -62,11 +62,13 @@ const BUILTIN_FIELDS: Record<string, FieldDef[]> = {
   bano: [
     {
       key: 'tipo',
-      label: 'Tipo',
+      label: 'Actividad',
       type: 'toggle',
       options: [
         { value: 'pis', label: 'Pis', emoji: '💦' },
         { value: 'caca', label: 'Caca', emoji: '💩' },
+        { value: 'ducha', label: 'Ducha', emoji: '🚿' },
+        { value: 'tina', label: 'Tina', emoji: '🛁' },
       ],
     },
   ],
@@ -89,7 +91,7 @@ function localNow(): string {
 }
 
 // Categories where duration is irrelevant (instant events)
-const NO_DURATION = ['agua', 'medicina', 'bano'];
+const NO_DURATION = ['agua', 'medicina'];
 // Categories that already have their own duration field (minutos)
 const HAS_OWN_DURATION = ['actividad', 'ocio'];
 
@@ -421,11 +423,19 @@ export function AddRecordModal({ onClose }: AddRecordModalProps) {
               {selectedCategory && (() => {
                 const isCustom = !NO_DURATION.includes(selectedCategory) && !HAS_OWN_DURATION.includes(selectedCategory) && !(selectedCategory in CATEGORY_CONFIG);
                 const customCat = customCategories.find(c => c.id === selectedCategory);
-                const showDur = !NO_DURATION.includes(selectedCategory) &&
+                
+                // For bano, only show duration if it's ducha/tina
+                const isBanoWithDur = selectedCategory === 'bano' && (formData.tipo === 'ducha' || formData.tipo === 'tina');
+                
+                const showDur = isBanoWithDur || (
+                  !NO_DURATION.includes(selectedCategory) &&
                   !HAS_OWN_DURATION.includes(selectedCategory) &&
-                  (isCustom ? customCat?.hasDuration : true);
-                return showDur;
-              })() && (
+                  (isCustom ? customCat?.hasDuration : true)
+                );
+                
+                if (!showDur) return null;
+
+                return (
                   <div className="rounded-xl border border-zinc-100 dark:border-white/8 bg-zinc-50 dark:bg-white/5 px-3 py-2.5">
                     <div
                       className="flex cursor-pointer items-center justify-between select-none"
@@ -434,7 +444,7 @@ export function AddRecordModal({ onClose }: AddRecordModalProps) {
                       <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
                         Duración
                       </span>
-                      <Toggle on={hasDuration} />
+                      <Toggle on={hasDuration || isBanoWithDur} />
                     </div>
                     {hasDuration && (
                       <div className="mt-2 flex items-center gap-2">
@@ -456,7 +466,8 @@ export function AddRecordModal({ onClose }: AddRecordModalProps) {
                       </div>
                     )}
                   </div>
-                )}
+                );
+              })()}
 
               {/* Date/time picker */}
               <div className="rounded-xl border border-zinc-100 dark:border-white/8 bg-zinc-50 dark:bg-white/5 px-3 py-2.5">

@@ -107,10 +107,10 @@ export const CATEGORY_CONFIG: Record<
     labelColor: 'text-yellow-600 dark:text-yellow-500',
   },
   bano: {
-    label: 'Baño',
+    label: 'Aseo y Baño',
     color: '#d97706',
     glowClass: 'glow-bano',
-    emoji: '🚽',
+    emoji: '🧼',
     bg: 'bg-amber-50 dark:bg-amber-950/40',
     border: 'border-amber-200 dark:border-amber-500/25',
     labelColor: 'text-amber-600 dark:text-amber-400',
