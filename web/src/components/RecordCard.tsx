@@ -286,18 +286,20 @@ export function RecordCard({ record, pending = false }: RecordCardProps) {
           )}
           </div>
 
-          <div className="flex items-center gap-2 pt-1 pb-1">
-            <input
-              type="checkbox"
-              id={`rule-${record.id}`}
-              checked={saveAsRule}
-              onChange={(e) => setSaveAsRule(e.target.checked)}
-              className="rounded border-zinc-300 dark:border-white/10"
-            />
-            <label htmlFor={`rule-${record.id}`} className="text-[11px] text-zinc-500 dark:text-zinc-400 cursor-pointer">
-              Guardar regla para "{record.rawText}"
-            </label>
-          </div>
+          {record.rawText && (
+            <div className="flex items-center gap-2 pt-1 pb-1">
+              <input
+                type="checkbox"
+                id={`rule-${record.id}`}
+                checked={saveAsRule}
+                onChange={(e) => setSaveAsRule(e.target.checked)}
+                className="rounded border-zinc-300 dark:border-white/10"
+              />
+              <label htmlFor={`rule-${record.id}`} className="text-[11px] text-zinc-500 dark:text-zinc-400 cursor-pointer">
+                Guardar regla para "{record.rawText}"
+              </label>
+            </div>
+          )}
 
           <div className="flex justify-end gap-3 pt-1 border-t border-zinc-100 dark:border-white/5">
             <button

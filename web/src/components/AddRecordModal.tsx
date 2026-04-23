@@ -215,7 +215,7 @@ export function AddRecordModal({ onClose }: AddRecordModalProps) {
               <p className="mb-3 text-[11px] text-zinc-400 dark:text-zinc-500">Elige una categoría</p>
               <div className="grid grid-cols-4 gap-2">
                 {/* Built-in categories */}
-                {ALL_CATEGORIES.map((cat) => {
+                {ALL_CATEGORIES.filter((cat) => cat !== 'unknown').map((cat) => {
                   const c = CATEGORY_CONFIG[cat];
                   return (
                     <button
