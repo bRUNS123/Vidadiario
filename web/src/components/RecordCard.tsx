@@ -200,9 +200,10 @@ export function RecordCard({ record, pending = false }: RecordCardProps) {
         approving ? 'scale-95 opacity-0' : 'scale-100 opacity-100'
       }`}
       style={config.isCustom ? {
-        backgroundColor: `${config.color}25`,
-        borderColor: `${config.color}45`,
-        ...(pending ? { boxShadow: `0 0 24px ${config.color}30` } : {}),
+        backgroundColor: `${config.color}45`, // ~27% opacity
+        borderColor: `${config.color}80`,    // ~50% opacity
+        boxShadow: `0 4px 20px -10px ${config.color}40`,
+        ...(pending ? { boxShadow: `0 0 24px ${config.color}40` } : {}),
       } : undefined}
     >
       {/* Header row */}
@@ -211,8 +212,8 @@ export function RecordCard({ record, pending = false }: RecordCardProps) {
           <span className="flex-shrink-0 text-xl">{config.emoji}</span>
           <div className="min-w-0">
             <p
-              className={`text-[10px] font-semibold uppercase tracking-widest ${config.isCustom ? '' : config.labelColor}`}
-              style={config.isCustom ? { color: config.color } : undefined}
+              className={`text-[10px] font-bold uppercase tracking-widest ${config.isCustom ? '' : config.labelColor}`}
+              style={config.isCustom ? { color: config.color, filter: 'brightness(1.2)' } : undefined}
             >
               {config.label}
             </p>
