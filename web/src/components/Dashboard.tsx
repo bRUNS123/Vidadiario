@@ -64,7 +64,7 @@ export function Dashboard() {
       <header className="flex flex-shrink-0 items-center justify-between border-b border-zinc-200 dark:border-white/5 bg-white dark:bg-zinc-950 px-5 py-3">
         <div className="flex items-center gap-2">
           <span className="text-base">📓</span>
-          <h1 className="text-sm font-semibold text-zinc-900 dark:text-white">Diario AG</h1>
+          <h1 className="text-sm font-semibold text-zinc-900 dark:text-white">Diario AG <span className="text-blue-500">●</span></h1>
           {DEMO_MODE && (
             <span className="rounded-full bg-yellow-100 dark:bg-yellow-500/15 px-2 py-0.5 text-[10px] font-medium text-yellow-700 dark:text-yellow-400">
               DEMO
