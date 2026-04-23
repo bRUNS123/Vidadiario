@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { collection, limit, onSnapshot, query, where } from 'firebase/firestore';
+import { collection, limit, onSnapshot, orderBy, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { DiarioRecord } from '@/lib/types';
 import { MOCK_CONFIRMED, MOCK_PENDING } from '@/lib/mock-data';
