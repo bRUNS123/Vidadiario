@@ -18,6 +18,13 @@ function cap(s: string) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
+function localDateKey(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 function groupByDate(records: DiarioRecord[]): DayGroup[] {
   const map: Record<string, DayGroup> = {};
   const today = new Date();
@@ -27,7 +34,7 @@ function groupByDate(records: DiarioRecord[]): DayGroup[] {
   for (const record of records) {
     const ts = record.confirmedAt ?? record.createdAt;
     const date = new Date(ts.seconds * 1000);
-    const sortKey = date.toISOString().slice(0, 10);
+    const sortKey = localDateKey(date); // usa fecha local, no UTC
 
     if (!map[sortKey]) {
       const isToday = date.toDateString() === today.toDateString();
