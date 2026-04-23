@@ -193,7 +193,7 @@ Reference these user-defined rules to infer their specific terminology mapping: 
           category = 'agua';
           if (firstNum) parsedData.cantidad = firstNum;
         } else if (tokens.some((t: string) =>
-          ['jugando', 'jugar', 'jugué', 'jugue', 'gaming', 'game', 'games'].includes(t) ||
+          ['jugando', 'jugar', 'jugué', 'jugue', 'gaming', 'game', 'games', 'hots', 'lol', 'tft', 'steam', 'juego'].includes(t) ||
           t.startsWith('jug')
         )) {
           category = 'ocio';

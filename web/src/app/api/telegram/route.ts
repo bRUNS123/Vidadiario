@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
 
     await sendMessage(
       message.chat.id,
-      `${EMOJI[parsed.category]} Registrado en el inbox. Pendiente de aprobación.`
+      `${EMOJI[parsed.category] || '📝'} Registrado en el inbox. Pendiente de aprobación.`
     );
 
     return NextResponse.json({ ok: true });
