@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { deleteDoc, doc, setDoc, Timestamp, updateDoc } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
+import { collection, deleteDoc, doc, getDocs, setDoc, Timestamp, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Category, DiarioRecord, ParsedData, ALL_CATEGORIES, CATEGORY_CONFIG } from '@/lib/types';
 import { useCustomCategories } from '@/lib/custom-categories';
@@ -109,6 +109,16 @@ export function RecordCard({ record, pending = false }: RecordCardProps) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [editCategory, setEditCategory] = useState<Category>(record.category as Category);
   const [saveAsRule, setSaveAsRule] = useState(false);
+  const [ruleMode, setRuleMode] = useState<'new' | 'existing'>('new');
+  const [selectedExistingRule, setSelectedExistingRule] = useState('');
+  const [existingRules, setExistingRules] = useState<{ id: string; text: string; category: string; parsedData: Partial<ParsedData> }[]>([]);
+
+  useEffect(() => {
+    if (!editing) return;
+    getDocs(collection(db, 'aliasMappings')).then((snap) =>
+      setExistingRules(snap.docs.map((d) => ({ id: d.id, ...d.data() } as any)))
+    );
+  }, [editing]);
 
   const { getCatConfig } = useCustomCategories();
   const config = getCatConfig(record.category);
@@ -137,11 +147,23 @@ export function RecordCard({ record, pending = false }: RecordCardProps) {
       if (editing) await saveEdit();
       
       if (saveAsRule && record.rawText) {
-        await setDoc(doc(db, 'aliasMappings', record.rawText.toLowerCase().trim().replace(/\//g, '_')), {
-          text: record.rawText.toLowerCase().trim(),
-          category: finalCategory,
-          parsedData: finalParsedData,
-        });
+        const aliasId = record.rawText.toLowerCase().trim().replace(/[^a-z0-9áéíóúüñ\s]/g, '').replace(/\s+/g, '_');
+        if (ruleMode === 'existing' && selectedExistingRule) {
+          const base = existingRules.find((r) => r.id === selectedExistingRule);
+          if (base) {
+            await setDoc(doc(db, 'aliasMappings', aliasId), {
+              text: record.rawText.toLowerCase().trim(),
+              category: base.category,
+              parsedData: base.parsedData,
+            });
+          }
+        } else {
+          await setDoc(doc(db, 'aliasMappings', aliasId), {
+            text: record.rawText.toLowerCase().trim(),
+            category: finalCategory,
+            parsedData: finalParsedData,
+          });
+        }
       }
 
       await updateDoc(doc(db, 'registros', record.id), {
@@ -293,18 +315,52 @@ export function RecordCard({ record, pending = false }: RecordCardProps) {
           )}
 
           {record.rawText && (
-            <div className="flex items-center gap-2 pt-1 pb-1">
-              <input
-                type="checkbox"
-                id={`rule-${record.id}`}
-                checked={saveAsRule}
-                onChange={(e) => setSaveAsRule(e.target.checked)}
-                className="rounded border-zinc-300 dark:border-white/10"
-              />
-              <label htmlFor={`rule-${record.id}`} className="flex min-w-0 gap-1 text-[11px] text-zinc-500 dark:text-zinc-400 cursor-pointer">
-                <span className="flex-shrink-0">Guardar regla para</span>
-                <span className="truncate font-mono">"{record.rawText}"</span>
-              </label>
+            <div className="space-y-2 pt-1 pb-1">
+              {/* Toggle */}
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id={`rule-${record.id}`}
+                  checked={saveAsRule}
+                  onChange={(e) => { setSaveAsRule(e.target.checked); setRuleMode('new'); setSelectedExistingRule(''); }}
+                  className="rounded border-zinc-300 dark:border-white/10"
+                />
+                <label htmlFor={`rule-${record.id}`} className="flex min-w-0 gap-1 text-[11px] text-zinc-500 dark:text-zinc-400 cursor-pointer">
+                  <span className="flex-shrink-0">Guardar regla para</span>
+                  <span className="truncate font-mono">"{record.rawText}"</span>
+                </label>
+              </div>
+
+              {/* Mode picker */}
+              {saveAsRule && (
+                <div className="ml-5 space-y-1.5">
+                  <label className="flex cursor-pointer items-center gap-2 text-[11px] text-zinc-500 dark:text-zinc-400">
+                    <input type="radio" name={`ruleMode-${record.id}`} checked={ruleMode === 'new'} onChange={() => setRuleMode('new')} className="accent-zinc-600" />
+                    Nueva regla (con la categoría seleccionada)
+                  </label>
+                  <label className="flex cursor-pointer items-center gap-2 text-[11px] text-zinc-500 dark:text-zinc-400">
+                    <input type="radio" name={`ruleMode-${record.id}`} checked={ruleMode === 'existing'} onChange={() => setRuleMode('existing')} className="accent-zinc-600" />
+                    Asociar con regla existente
+                  </label>
+                  {ruleMode === 'existing' && (
+                    <select
+                      value={selectedExistingRule}
+                      onChange={(e) => setSelectedExistingRule(e.target.value)}
+                      className="ml-4 w-[calc(100%-1rem)] rounded-md border border-zinc-200 dark:border-white/15 bg-white dark:bg-zinc-800 px-2 py-1 text-[11px] text-zinc-900 dark:text-white outline-none [color-scheme:light] dark:[color-scheme:dark]"
+                    >
+                      <option value="">Elegir regla...</option>
+                      {existingRules.map((r) => {
+                        const cfg = getCatConfig(r.category);
+                        return (
+                          <option key={r.id} value={r.id}>
+                            {cfg.emoji} {r.text}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
