@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { collection, limit, onSnapshot, orderBy, query, where } from 'firebase/firestore';
+import { collection, limit, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { DiarioRecord } from '@/lib/types';
 import { MOCK_CONFIRMED, MOCK_PENDING } from '@/lib/mock-data';
@@ -33,7 +33,6 @@ export function Dashboard() {
     const confirmedQ = query(
       collection(db, 'registros'),
       where('status', '==', 'confirmed'),
-      orderBy('createdAt', 'desc'),
       limit(200)
     );
 
@@ -42,7 +41,10 @@ export function Dashboard() {
       setLoading(false);
     });
     const unsubConfirmed = onSnapshot(confirmedQ, (snap) => {
-      setConfirmed(snap.docs.map((d) => ({ id: d.id, ...d.data() } as DiarioRecord)));
+      const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as DiarioRecord));
+      // Sort client-side by createdAt (registration time, not approval time)
+      docs.sort((a, b) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0));
+      setConfirmed(docs);
     });
 
     return () => { unsubPending(); unsubConfirmed(); };
