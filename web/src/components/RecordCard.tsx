@@ -284,7 +284,7 @@ export function RecordCard({ record, pending = false }: RecordCardProps) {
                       [field.key]: field.type === 'number' ? Number(e.target.value) : e.target.value,
                     }))
                   }
-                  className="flex-1 rounded-lg border border-zinc-200 dark:border-white/15 bg-white dark:bg-zinc-800 px-2.5 py-1.5 text-sm text-zinc-900 dark:text-white outline-none transition-colors placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:border-zinc-400 dark:focus:border-white/30"
+                  className="flex-1 rounded-md border border-zinc-200 dark:border-white/15 bg-white dark:bg-zinc-800 px-2 py-1 text-[13px] text-zinc-900 dark:text-white outline-none transition-colors placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:border-zinc-400 dark:focus:border-white/30"
                 />
               </div>
             )
