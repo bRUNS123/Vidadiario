@@ -62,6 +62,11 @@ function groupByDate(records: DiarioRecord[]): DayGroup[] {
     map[sortKey].records.push(record);
   }
 
+  // Sort records within each day by createdAt descending (registration time, not approval time)
+  for (const group of Object.values(map)) {
+    group.records.sort((a, b) => b.createdAt.seconds - a.createdAt.seconds);
+  }
+
   return Object.values(map).sort((a, b) => b.sortKey.localeCompare(a.sortKey));
 }
 

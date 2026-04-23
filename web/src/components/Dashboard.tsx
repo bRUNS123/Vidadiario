@@ -33,7 +33,7 @@ export function Dashboard() {
     const confirmedQ = query(
       collection(db, 'registros'),
       where('status', '==', 'confirmed'),
-      orderBy('confirmedAt', 'desc'),
+      orderBy('createdAt', 'desc'),
       limit(200)
     );
 
