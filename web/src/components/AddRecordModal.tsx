@@ -10,6 +10,24 @@ import {
   useCustomCategories,
 } from '@/lib/custom-categories';
 
+// ── Toggle component ──────────────────────────────────────────────────────────
+
+function Toggle({ on }: { on: boolean }) {
+  return (
+    <div
+      className={`relative h-6 w-11 flex-shrink-0 rounded-full transition-colors duration-200 ${
+        on ? 'bg-zinc-800 dark:bg-zinc-300' : 'bg-zinc-200 dark:bg-zinc-600'
+      }`}
+    >
+      <span
+        className={`absolute top-1 h-4 w-4 rounded-full shadow transition-transform duration-200 ${
+          on ? 'translate-x-6 bg-white dark:bg-zinc-900' : 'translate-x-1 bg-white dark:bg-zinc-300'
+        }`}
+      />
+    </div>
+  );
+}
+
 // ── Field definitions for built-in categories ─────────────────────────────────
 
 type FieldDef = {
@@ -314,19 +332,16 @@ export function AddRecordModal({ onClose }: AddRecordModalProps) {
               </div>
 
               {/* Duration option */}
-              <label className="flex cursor-pointer items-center justify-between rounded-xl border border-zinc-100 dark:border-white/8 bg-zinc-50 dark:bg-white/5 px-3 py-2.5">
+              <div
+                onClick={() => setNewHasDuration(!newHasDuration)}
+                className="flex cursor-pointer items-center justify-between rounded-xl border border-zinc-100 dark:border-white/8 bg-zinc-50 dark:bg-white/5 px-3 py-2.5 select-none"
+              >
                 <div>
                   <p className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Permite duración</p>
                   <p className="text-[10px] text-zinc-400">Ej: sesión de 30 min</p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setNewHasDuration(!newHasDuration)}
-                  className={`relative h-5 w-9 rounded-full transition-colors ${newHasDuration ? 'bg-zinc-700 dark:bg-white/40' : 'bg-zinc-200 dark:bg-white/10'}`}
-                >
-                  <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${newHasDuration ? 'translate-x-4' : 'translate-x-0.5'}`} />
-                </button>
-              </label>
+                <Toggle on={newHasDuration} />
+              </div>
 
               {/* Preview */}
               <div
@@ -412,18 +427,15 @@ export function AddRecordModal({ onClose }: AddRecordModalProps) {
                 return showDur;
               })() && (
                   <div className="rounded-xl border border-zinc-100 dark:border-white/8 bg-zinc-50 dark:bg-white/5 px-3 py-2.5">
-                    <label className="flex cursor-pointer items-center justify-between">
+                    <div
+                      className="flex cursor-pointer items-center justify-between select-none"
+                      onClick={() => { setHasDuration(!hasDuration); setDurationMins(''); }}
+                    >
                       <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
                         Duración
                       </span>
-                      <button
-                        type="button"
-                        onClick={() => { setHasDuration(!hasDuration); setDurationMins(''); }}
-                        className={`relative h-5 w-9 rounded-full transition-colors ${hasDuration ? 'bg-zinc-700 dark:bg-white/40' : 'bg-zinc-200 dark:bg-white/10'}`}
-                      >
-                        <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${hasDuration ? 'translate-x-4' : 'translate-x-0.5'}`} />
-                      </button>
-                    </label>
+                      <Toggle on={hasDuration} />
+                    </div>
                     {hasDuration && (
                       <div className="mt-2 flex items-center gap-2">
                         <input
