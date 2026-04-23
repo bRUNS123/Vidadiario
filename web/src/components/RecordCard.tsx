@@ -237,7 +237,7 @@ export function RecordCard({ record, pending = false }: RecordCardProps) {
                   setEditCategory(e.target.value as Category);
                   setEditData({});
                 }}
-                className="w-full rounded-md border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-white/5 px-2 py-1.5 text-sm text-zinc-900 dark:text-white outline-none"
+                className="w-full rounded-xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-white outline-none [color-scheme:light] dark:[color-scheme:dark]"
               >
                 <option value="" disabled>Seleccionar categoría...</option>
                 {ALL_CATEGORIES.filter(c => c !== 'unknown').map(c => (
@@ -247,6 +247,8 @@ export function RecordCard({ record, pending = false }: RecordCardProps) {
             </div>
           )}
 
+          {/* Only show edit fields if category is resolved */}
+          {(!(record.category === 'unknown' || config.needsCategorization) || (editCategory && editCategory !== 'unknown')) && (
           <div className="space-y-2">
             {editFields.map((field) =>
             field.type === 'toggle' && field.options ? (
@@ -286,6 +288,7 @@ export function RecordCard({ record, pending = false }: RecordCardProps) {
             )
           )}
           </div>
+          )}
 
           {record.rawText && (
             <div className="flex items-center gap-2 pt-1 pb-1">
@@ -296,8 +299,9 @@ export function RecordCard({ record, pending = false }: RecordCardProps) {
                 onChange={(e) => setSaveAsRule(e.target.checked)}
                 className="rounded border-zinc-300 dark:border-white/10"
               />
-              <label htmlFor={`rule-${record.id}`} className="text-[11px] text-zinc-500 dark:text-zinc-400 cursor-pointer">
-                Guardar regla para "{record.rawText}"
+              <label htmlFor={`rule-${record.id}`} className="flex min-w-0 gap-1 text-[11px] text-zinc-500 dark:text-zinc-400 cursor-pointer">
+                <span className="flex-shrink-0">Guardar regla para</span>
+                <span className="truncate font-mono">"{record.rawText}"</span>
               </label>
             </div>
           )}
