@@ -120,7 +120,7 @@ export function RecordCard({ record, pending = false }: RecordCardProps) {
     );
   }, [editing]);
 
-  const { getCatConfig } = useCustomCategories();
+  const { getCatConfig, customCategories } = useCustomCategories();
   const config = getCatConfig(record.category);
   const editFields = getEditFields(editCategory);
 
@@ -266,6 +266,13 @@ export function RecordCard({ record, pending = false }: RecordCardProps) {
                 {ALL_CATEGORIES.filter(c => c !== 'unknown').map(c => (
                   <option key={c} value={c}>{CATEGORY_CONFIG[c].emoji} {CATEGORY_CONFIG[c].label}</option>
                 ))}
+                {customCategories.length > 0 && (
+                  <optgroup label="── Personalizadas ──">
+                    {customCategories.map(c => (
+                      <option key={c.id} value={c.id}>{c.emoji} {c.label}</option>
+                    ))}
+                  </optgroup>
+                )}
               </select>
             </div>
           )}
