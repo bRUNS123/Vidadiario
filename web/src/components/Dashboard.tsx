@@ -10,6 +10,7 @@ import { CustomCategoriesProvider } from '@/lib/custom-categories';
 import { InboxPanel } from './InboxPanel';
 import { TimelinePanel } from './TimelinePanel';
 import { AddRecordModal } from './AddRecordModal';
+import { RulesModal } from './RulesModal';
 
 const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
 
@@ -18,6 +19,7 @@ export function Dashboard() {
   const [confirmed, setConfirmed] = useState<DiarioRecord[]>(DEMO_MODE ? MOCK_CONFIRMED : []);
   const [loading, setLoading] = useState(!DEMO_MODE);
   const [showModal, setShowModal] = useState(false);
+  const [showRules, setShowRules] = useState(false);
   const { isDark, toggle } = useTheme();
 
   useEffect(() => {
@@ -69,6 +71,12 @@ export function Dashboard() {
         </div>
         <div className="flex items-center gap-2">
           <button
+            onClick={() => setShowRules(true)}
+            className="flex items-center gap-1.5 rounded-lg border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-white/5 px-3 py-1.5 text-[12px] font-medium text-zinc-600 dark:text-zinc-300 transition-all hover:bg-zinc-100 dark:hover:bg-white/10"
+          >
+            🗂️ Reglas
+          </button>
+          <button
             onClick={() => setShowModal(true)}
             className="flex items-center gap-1.5 rounded-lg bg-zinc-900 dark:bg-white px-3 py-1.5 text-[12px] font-semibold text-white dark:text-zinc-900 transition-all hover:opacity-90 active:scale-95"
           >
@@ -92,6 +100,7 @@ export function Dashboard() {
       </div>
 
       {showModal && <AddRecordModal onClose={() => setShowModal(false)} />}
+      {showRules && <RulesModal onClose={() => setShowRules(false)} />}
     </div>
   );
 }
