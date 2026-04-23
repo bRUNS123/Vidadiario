@@ -227,18 +227,19 @@ export function RecordCard({ record, pending = false }: RecordCardProps) {
       {/* Edit form */}
       {editing && (
         <div className="mt-3 space-y-3 border-t border-zinc-200 dark:border-white/5 pt-3">
-          {record.category === 'unknown' && (
+          {/* Category picker — shown for unknown/unresolved records */}
+          {(record.category === 'unknown' || config.needsCategorization) && (
             <div className="flex flex-col gap-1.5">
               <label className="text-[11px] text-zinc-400 dark:text-zinc-500">Categoría</label>
               <select
-                value={editCategory}
+                value={editCategory === 'unknown' ? '' : editCategory}
                 onChange={(e) => {
                   setEditCategory(e.target.value as Category);
                   setEditData({});
                 }}
                 className="w-full rounded-md border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-white/5 px-2 py-1.5 text-sm text-zinc-900 dark:text-white outline-none"
               >
-                <option value="unknown" disabled>Seleccionar...</option>
+                <option value="" disabled>Seleccionar categoría...</option>
                 {ALL_CATEGORIES.filter(c => c !== 'unknown').map(c => (
                   <option key={c} value={c}>{CATEGORY_CONFIG[c].emoji} {CATEGORY_CONFIG[c].label}</option>
                 ))}

@@ -186,11 +186,30 @@ Reference these user-defined rules to infer their specific terminology mapping: 
         }
       }
 
-      // Hardcoded generic fallback for obvious keywords if still missing
+      // Hardcoded keyword shortcuts for common cases
       if (!category) {
-        if (tokens.some((t: string) => 'agua'.startsWith(t) || t === 'h2o')) {
+        const raw = textOnly;
+        if (tokens.some((t: string) => 'agua'.startsWith(t) || t === 'h2o' || t === 'agu')) {
           category = 'agua';
           if (firstNum) parsedData.cantidad = firstNum;
+        } else if (tokens.some((t: string) =>
+          ['jugando', 'jugar', 'jugué', 'jugue', 'gaming', 'game', 'games'].includes(t) ||
+          t.startsWith('jug')
+        )) {
+          category = 'ocio';
+          parsedData = { actividad: raw.trim() || trimmed, minutos: firstNum };
+        } else if (tokens.some((t: string) =>
+          ['comiendo', 'comer', 'comí', 'comi', 'almorzando', 'almuerzo', 'desayuno',
+           'desayunando', 'cenando', 'cena'].includes(t)
+        )) {
+          category = 'alimentacion';
+          parsedData = { descripcion: raw.trim() || trimmed };
+        } else if (tokens.some((t: string) =>
+          ['corriendo', 'correr', 'corrí', 'corri', 'ejercicio', 'entrenando', 'entrenar',
+           'gimnasio', 'gym', 'pesas', 'cardio', 'caminar', 'caminando'].includes(t)
+        )) {
+          category = 'actividad';
+          parsedData = { nombre: raw.trim() || trimmed, minutos: firstNum };
         }
       }
     }

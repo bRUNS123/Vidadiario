@@ -116,13 +116,13 @@ export const CATEGORY_CONFIG: Record<
     labelColor: 'text-amber-600 dark:text-amber-400',
   },
   unknown: {
-    label: 'Desconocido',
+    label: 'Sin categoría',
     color: '#71717a',
-    glowClass: 'glow-unknown',
+    glowClass: '',
     emoji: '❓',
     bg: 'bg-zinc-50 dark:bg-zinc-950/40',
-    border: 'border-zinc-200 dark:border-zinc-500/25',
-    labelColor: 'text-zinc-600 dark:text-zinc-400',
+    border: 'border-zinc-300 dark:border-zinc-600/40',
+    labelColor: 'text-zinc-500 dark:text-zinc-400',
   },
 };
 
