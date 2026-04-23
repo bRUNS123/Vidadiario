@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { doc, Timestamp, updateDoc } from 'firebase/firestore';
+import { deleteDoc, doc, Timestamp, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Category, DiarioRecord, ParsedData } from '@/lib/types';
 import { useCustomCategories } from '@/lib/custom-categories';
@@ -27,7 +27,7 @@ function formatSummary(record: DiarioRecord): string {
     case 'bano':
       return parsedData.tipo === 'caca' ? '💩 Caca' : '💦 Pis';
     default:
-      return record.rawText || '—';
+      return parsedData.descripcion ?? record.rawText ?? '—';
   }
 }
 
@@ -39,32 +39,49 @@ function formatTime(ts?: { seconds: number }): string {
   });
 }
 
-type EditField = { key: keyof ParsedData; label: string; type: 'text' | 'number' | 'toggle'; options?: { value: string; label: string; emoji: string }[] };
+type EditField = {
+  key: keyof ParsedData;
+  label: string;
+  type: 'text' | 'number' | 'toggle';
+  options?: { value: string; label: string; emoji: string }[];
+};
 
 function getEditFields(category: Category): EditField[] {
   switch (category) {
-    case 'agua': return [{ key: 'cantidad', label: 'ml', type: 'number' }];
-    case 'actividad': return [
-      { key: 'nombre', label: 'Ejercicio', type: 'text' },
-      { key: 'minutos', label: 'Minutos', type: 'number' },
-    ];
-    case 'alimentacion': return [{ key: 'descripcion', label: 'Descripción', type: 'text' }];
-    case 'medicina': return [
-      { key: 'nombre', label: 'Nombre', type: 'text' },
-      { key: 'dosis', label: 'Dosis', type: 'text' },
-    ];
-    case 'ocio': return [
-      { key: 'actividad', label: 'Actividad', type: 'text' },
-      { key: 'minutos', label: 'Minutos', type: 'number' },
-    ];
-    case 'agenda': return [
-      { key: 'evento', label: 'Evento', type: 'text' },
-      { key: 'hora', label: 'Hora (HH:MM)', type: 'text' },
-    ];
-    case 'bano': return [{
-      key: 'tipo', label: 'Tipo', type: 'toggle',
-      options: [{ value: 'pis', label: 'Pis', emoji: '💦' }, { value: 'caca', label: 'Caca', emoji: '💩' }],
-    }];
+    case 'agua':
+      return [{ key: 'cantidad', label: 'ml', type: 'number' }];
+    case 'actividad':
+      return [
+        { key: 'nombre', label: 'Ejercicio', type: 'text' },
+        { key: 'minutos', label: 'Duración (min)', type: 'number' },
+      ];
+    case 'alimentacion':
+      return [{ key: 'descripcion', label: 'Descripción', type: 'text' }];
+    case 'medicina':
+      return [
+        { key: 'nombre', label: 'Nombre', type: 'text' },
+        { key: 'dosis', label: 'Dosis', type: 'text' },
+      ];
+    case 'ocio':
+      return [
+        { key: 'actividad', label: 'Actividad', type: 'text' },
+        { key: 'minutos', label: 'Duración (min)', type: 'number' },
+      ];
+    case 'agenda':
+      return [
+        { key: 'evento', label: 'Evento', type: 'text' },
+        { key: 'hora', label: 'Hora (HH:MM)', type: 'text' },
+      ];
+    case 'bano':
+      return [{
+        key: 'tipo', label: 'Tipo', type: 'toggle',
+        options: [
+          { value: 'pis', label: 'Pis', emoji: '💦' },
+          { value: 'caca', label: 'Caca', emoji: '💩' },
+        ],
+      }];
+    default:
+      return [{ key: 'descripcion', label: 'Descripción', type: 'text' }];
   }
 }
 
@@ -78,6 +95,7 @@ export function RecordCard({ record, pending = false }: RecordCardProps) {
   const [editData, setEditData] = useState<Partial<ParsedData>>({});
   const [approving, setApproving] = useState(false);
   const [dismissed, setDismissed] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const { getCatConfig } = useCustomCategories();
   const config = getCatConfig(record.category);
@@ -110,11 +128,26 @@ export function RecordCard({ record, pending = false }: RecordCardProps) {
     }
   }
 
+  async function handleDelete() {
+    if (!confirmDelete) {
+      setConfirmDelete(true);
+      setTimeout(() => setConfirmDelete(false), 3000);
+      return;
+    }
+    try {
+      await deleteDoc(doc(db, 'registros', record.id));
+      setDismissed(true);
+    } catch (err) {
+      console.error(err);
+      setConfirmDelete(false);
+    }
+  }
+
   if (dismissed) return null;
 
   return (
     <div
-      className={`rounded-xl border p-4 transition-all duration-300 ${config.bg} ${config.border} ${pending && config.glowClass ? config.glowClass : ''} ${
+      className={`group rounded-xl border p-4 transition-all duration-300 ${config.bg} ${config.border} ${pending && config.glowClass ? config.glowClass : ''} ${
         approving ? 'scale-95 opacity-0' : 'scale-100 opacity-100'
       }`}
       style={pending && config.isCustom ? { boxShadow: `0 0 24px ${config.color}30` } : undefined}
@@ -140,6 +173,24 @@ export function RecordCard({ record, pending = false }: RecordCardProps) {
             <span className="rounded-full bg-yellow-100 dark:bg-yellow-500/15 px-1.5 py-0.5 text-[10px] font-medium text-yellow-700 dark:text-yellow-500">
               CAL
             </span>
+          )}
+          {/* Delete button — always visible on pending, hover-only on confirmed */}
+          {!editing && (
+            <button
+              onClick={handleDelete}
+              className={`rounded-md px-1.5 py-0.5 text-[11px] font-medium transition-all ${
+                pending
+                  ? 'opacity-100'
+                  : 'opacity-0 group-hover:opacity-100'
+              } ${
+                confirmDelete
+                  ? 'bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400'
+                  : 'text-zinc-300 dark:text-zinc-600 hover:text-red-500 dark:hover:text-red-400'
+              }`}
+              title="Eliminar registro"
+            >
+              {confirmDelete ? '¿Seguro?' : '×'}
+            </button>
           )}
         </div>
       </div>
@@ -167,7 +218,9 @@ export function RecordCard({ record, pending = false }: RecordCardProps) {
               </div>
             ) : (
               <div key={field.key} className="flex items-center gap-2">
-                <label className="w-24 flex-shrink-0 text-[11px] text-zinc-400 dark:text-zinc-500">{field.label}</label>
+                <label className="w-28 flex-shrink-0 text-[11px] text-zinc-400 dark:text-zinc-500">
+                  {field.label}
+                </label>
                 <input
                   type={field.type}
                   value={String(editData[field.key] ?? '')}
@@ -183,10 +236,16 @@ export function RecordCard({ record, pending = false }: RecordCardProps) {
             )
           )}
           <div className="flex justify-end gap-3 pt-1">
-            <button onClick={() => setEditing(false)} className="text-[11px] text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors">
+            <button
+              onClick={() => setEditing(false)}
+              className="text-[11px] text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors"
+            >
               Cancelar
             </button>
-            <button onClick={saveEdit} className="rounded-md bg-zinc-100 dark:bg-white/10 px-3 py-1 text-[11px] text-zinc-900 dark:text-white transition-colors hover:bg-zinc-200 dark:hover:bg-white/15">
+            <button
+              onClick={saveEdit}
+              className="rounded-md bg-zinc-100 dark:bg-white/10 px-3 py-1 text-[11px] text-zinc-900 dark:text-white transition-colors hover:bg-zinc-200 dark:hover:bg-white/15"
+            >
               Guardar
             </button>
           </div>
@@ -196,7 +255,10 @@ export function RecordCard({ record, pending = false }: RecordCardProps) {
       {/* Pending actions */}
       {pending && !editing && (
         <div className="mt-3 flex items-center justify-between border-t border-zinc-200 dark:border-white/5 pt-3">
-          <button onClick={startEdit} className="text-[11px] text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors">
+          <button
+            onClick={startEdit}
+            className="text-[11px] text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors"
+          >
             Editar
           </button>
           <button

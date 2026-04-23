@@ -24,7 +24,7 @@ const BUILTIN_FIELDS: Record<string, FieldDef[]> = {
   agua: [{ key: 'cantidad', label: 'Cantidad (ml)', type: 'number', placeholder: '500' }],
   actividad: [
     { key: 'nombre', label: 'Ejercicio', type: 'text', placeholder: 'Pesas, Correr...' },
-    { key: 'minutos', label: 'Minutos', type: 'number', placeholder: '45' },
+    { key: 'minutos', label: 'Duración (min)', type: 'number', placeholder: '45' },
   ],
   alimentacion: [
     { key: 'descripcion', label: 'Qué comiste', type: 'text', placeholder: 'Ensalada César...' },
@@ -35,7 +35,7 @@ const BUILTIN_FIELDS: Record<string, FieldDef[]> = {
   ],
   ocio: [
     { key: 'actividad', label: 'Actividad', type: 'text', placeholder: 'Series, Lectura...' },
-    { key: 'minutos', label: 'Minutos', type: 'number', placeholder: '60' },
+    { key: 'minutos', label: 'Duración (min)', type: 'number', placeholder: '60' },
   ],
   agenda: [
     { key: 'evento', label: 'Evento', type: 'text', placeholder: 'Dentista...' },
