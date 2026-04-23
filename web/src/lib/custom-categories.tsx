@@ -73,9 +73,18 @@ export function CustomCategoriesProvider({ children }: { children: ReactNode }) 
   function getCatConfig(category: string): CatConfig {
     const catLower = category.toLowerCase();
     
-    // 1. Check built-in categories
-    if (catLower in CATEGORY_CONFIG) {
-      const cfg = CATEGORY_CONFIG[catLower as BuiltinCategory];
+    // 1. Check built-in categories and aliases
+    const aliases: Record<string, BuiltinCategory> = {
+      'ducha': 'bano',
+      'tina': 'bano',
+      'asiento': 'bano',
+      'baño': 'bano',
+    };
+
+    const targetCat = aliases[catLower] || catLower;
+
+    if (targetCat in CATEGORY_CONFIG) {
+      const cfg = CATEGORY_CONFIG[targetCat as BuiltinCategory];
       return { ...cfg, isCustom: false };
     }
 

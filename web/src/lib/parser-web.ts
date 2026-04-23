@@ -205,6 +205,11 @@ Reference these user-defined rules to infer their specific terminology mapping: 
           category = 'alimentacion';
           parsedData = { descripcion: raw.trim() || trimmed };
         } else if (tokens.some((t: string) =>
+          ['ducha', 'baño', 'bano', 'tina', 'asiento', 'duchando', 'bañando', 'aseo'].includes(t)
+        )) {
+          category = 'bano';
+          parsedData = { descripcion: raw.trim() || trimmed };
+        } else if (tokens.some((t: string) =>
           ['corriendo', 'correr', 'corrí', 'corri', 'ejercicio', 'entrenando', 'entrenar',
            'gimnasio', 'gym', 'pesas', 'cardio', 'caminar', 'caminando'].includes(t)
         )) {
