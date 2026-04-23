@@ -71,20 +71,29 @@ export function CustomCategoriesProvider({ children }: { children: ReactNode }) 
   }
 
   function getCatConfig(category: string): CatConfig {
-    if (category in CATEGORY_CONFIG) {
-      const cfg = CATEGORY_CONFIG[category as BuiltinCategory];
+    const catLower = category.toLowerCase();
+    
+    // 1. Check built-in categories
+    if (catLower in CATEGORY_CONFIG) {
+      const cfg = CATEGORY_CONFIG[catLower as BuiltinCategory];
       return { ...cfg, isCustom: false };
     }
-    const custom = customCategories.find((c) => c.id === category);
+
+    // 2. Check custom categories by ID or Label (case-insensitive)
+    const custom = customCategories.find(
+      (c) => c.id === category || c.label.toLowerCase() === catLower
+    );
+
     if (!custom) return FALLBACK;
+
     return {
       label: custom.label,
       emoji: custom.emoji,
       color: custom.color,
       glowClass: '',
-      bg: 'bg-zinc-100 dark:bg-zinc-800/50',
-      border: 'border-zinc-200 dark:border-zinc-700/40',
-      labelColor: 'text-zinc-500 dark:text-zinc-400',
+      bg: '', // Handled by inline styles in RecordCard
+      border: '',
+      labelColor: '',
       isCustom: true,
     };
   }

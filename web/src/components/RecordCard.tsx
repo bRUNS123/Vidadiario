@@ -200,8 +200,8 @@ export function RecordCard({ record, pending = false }: RecordCardProps) {
         approving ? 'scale-95 opacity-0' : 'scale-100 opacity-100'
       }`}
       style={config.isCustom ? {
-        backgroundColor: `${config.color}15`,
-        borderColor: `${config.color}35`,
+        backgroundColor: `${config.color}25`,
+        borderColor: `${config.color}45`,
         ...(pending ? { boxShadow: `0 0 24px ${config.color}30` } : {}),
       } : undefined}
     >

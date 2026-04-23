@@ -117,7 +117,7 @@ export function AddRecordModal({ onClose }: AddRecordModalProps) {
   // New category form state
   const [newEmoji, setNewEmoji] = useState('📝');
   const [newLabel, setNewLabel] = useState('');
-  const [newColor, setNewColor] = useState('#6b7280');
+  const [newColor, setNewColor] = useState('#3b82f6'); // Default to blue instead of gray
   const [newHasDuration, setNewHasDuration] = useState(false);
   const [creating, setCreating] = useState(false);
 

@@ -146,7 +146,14 @@ export function TimelinePanel({ records }: TimelinePanelProps) {
   const [copied, setCopied] = useState<string | null>(null);
   const { customCategories, getCatConfig } = useCustomCategories();
 
-  const filtered = activeFilter ? records.filter((r) => r.category === activeFilter) : records;
+  const filtered = activeFilter 
+    ? records.filter((r) => {
+        if (r.category === activeFilter) return true;
+        // Also match by label for custom categories
+        const custom = customCategories.find(c => c.id === activeFilter);
+        return custom && r.category.toLowerCase() === custom.label.toLowerCase();
+      }) 
+    : records;
   const grouped = groupByDate(filtered);
 
   async function handleExport(group: DayGroup) {
@@ -202,7 +209,9 @@ export function TimelinePanel({ records }: TimelinePanelProps) {
             );
           })}
           {customCategories.map((cat) => {
-            const count = records.filter((r) => r.category === cat.id).length;
+            const count = records.filter((r) => 
+              r.category === cat.id || r.category.toLowerCase() === cat.label.toLowerCase()
+            ).length;
             if (count === 0) return null;
             const active = activeFilter === cat.id;
             return (
