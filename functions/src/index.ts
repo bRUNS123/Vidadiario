@@ -57,22 +57,27 @@ export const telegramWebhook = onRequest(
       return;
     }
 
-    const parsed = parseMessage(
+    const parsed = await parseMessage(
       message.text,
+      db,
       message.from ? String(message.from.id) : undefined,
       message.message_id
     );
 
     if (!parsed) {
-      await reply(
-        '⚠️ Formato no reconocido.\n\nEjemplos:\n+h2o 500\n+af Pesas 45\n+com Ensalada César\n+med Creatina 5g\n+ocio Series 60\n!cita Dentista 10:30'
-      );
+      // This should theoretically only happen if it's completely empty or somehow failed internally
+      await reply('⚠️ No se pudo procesar el mensaje.');
       res.status(200).send('OK');
       return;
     }
 
     await db.collection('registros').add(parsed);
-    await reply(`${EMOJI[parsed.category]} Registrado en el inbox. Pendiente de aprobación.`);
+    if (parsed.category === 'unknown') {
+      await reply(`❓ Desconocido. Guardado en el Inbox para que lo clasifiques.`);
+    } else {
+      await reply(`${EMOJI[parsed.category] || '✅'} Registrado en el inbox. Pendiente de aprobación.`);
+    }
+    
     res.status(200).send('OK');
   }
 );

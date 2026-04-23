@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { deleteDoc, doc, Timestamp, updateDoc } from 'firebase/firestore';
+import { deleteDoc, doc, setDoc, Timestamp, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Category, DiarioRecord, ParsedData } from '@/lib/types';
+import { Category, DiarioRecord, ParsedData, ALL_CATEGORIES, CATEGORY_CONFIG } from '@/lib/types';
 import { useCustomCategories } from '@/lib/custom-categories';
 
 function formatSummary(record: DiarioRecord): string {
@@ -106,18 +106,22 @@ export function RecordCard({ record, pending = false }: RecordCardProps) {
   const [approving, setApproving] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [editCategory, setEditCategory] = useState<Category>(record.category as Category);
+  const [saveAsRule, setSaveAsRule] = useState(false);
 
   const { getCatConfig } = useCustomCategories();
   const config = getCatConfig(record.category);
-  const editFields = getEditFields(record.category as Category);
+  const editFields = getEditFields(editCategory);
 
   function startEdit() {
     setEditData({ ...record.parsedData });
+    setEditCategory(record.category as Category);
     setEditing(true);
   }
 
   async function saveEdit() {
     await updateDoc(doc(db, 'registros', record.id), {
+      category: editCategory,
       parsedData: { ...record.parsedData, ...editData },
     });
     setEditing(false);
@@ -126,7 +130,19 @@ export function RecordCard({ record, pending = false }: RecordCardProps) {
   async function handleApprove() {
     setApproving(true);
     try {
+      const finalCategory = editing ? editCategory : record.category;
+      const finalParsedData = editing ? { ...record.parsedData, ...editData } : record.parsedData;
+
       if (editing) await saveEdit();
+      
+      if (saveAsRule && record.rawText) {
+        await setDoc(doc(db, 'aliasMappings', record.rawText.toLowerCase().trim().replace(/\//g, '_')), {
+          text: record.rawText.toLowerCase().trim(),
+          category: finalCategory,
+          parsedData: finalParsedData,
+        });
+      }
+
       await updateDoc(doc(db, 'registros', record.id), {
         status: 'confirmed',
         confirmedAt: Timestamp.now(),
@@ -210,8 +226,28 @@ export function RecordCard({ record, pending = false }: RecordCardProps) {
 
       {/* Edit form */}
       {editing && (
-        <div className="mt-3 space-y-2 border-t border-zinc-200 dark:border-white/5 pt-3">
-          {editFields.map((field) =>
+        <div className="mt-3 space-y-3 border-t border-zinc-200 dark:border-white/5 pt-3">
+          {record.category === 'unknown' && (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] text-zinc-400 dark:text-zinc-500">Categoría</label>
+              <select
+                value={editCategory}
+                onChange={(e) => {
+                  setEditCategory(e.target.value as Category);
+                  setEditData({});
+                }}
+                className="w-full rounded-md border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-white/5 px-2 py-1.5 text-sm text-zinc-900 dark:text-white outline-none"
+              >
+                <option value="unknown" disabled>Seleccionar...</option>
+                {ALL_CATEGORIES.filter(c => c !== 'unknown').map(c => (
+                  <option key={c} value={c}>{CATEGORY_CONFIG[c].emoji} {CATEGORY_CONFIG[c].label}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div className="space-y-2">
+            {editFields.map((field) =>
             field.type === 'toggle' && field.options ? (
               <div key={field.key} className="flex gap-2">
                 {field.options.map((opt) => (
@@ -248,16 +284,31 @@ export function RecordCard({ record, pending = false }: RecordCardProps) {
               </div>
             )
           )}
-          <div className="flex justify-end gap-3 pt-1">
+          </div>
+
+          <div className="flex items-center gap-2 pt-1 pb-1">
+            <input
+              type="checkbox"
+              id={`rule-${record.id}`}
+              checked={saveAsRule}
+              onChange={(e) => setSaveAsRule(e.target.checked)}
+              className="rounded border-zinc-300 dark:border-white/10"
+            />
+            <label htmlFor={`rule-${record.id}`} className="text-[11px] text-zinc-500 dark:text-zinc-400 cursor-pointer">
+              Guardar regla para "{record.rawText}"
+            </label>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-1 border-t border-zinc-100 dark:border-white/5">
             <button
               onClick={() => setEditing(false)}
-              className="text-[11px] text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors"
+              className="mt-2 text-[11px] text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors"
             >
               Cancelar
             </button>
             <button
               onClick={saveEdit}
-              className="rounded-md bg-zinc-100 dark:bg-white/10 px-3 py-1 text-[11px] text-zinc-900 dark:text-white transition-colors hover:bg-zinc-200 dark:hover:bg-white/15"
+              className="mt-2 rounded-md bg-zinc-100 dark:bg-white/10 px-3 py-1 text-[11px] text-zinc-900 dark:text-white transition-colors hover:bg-zinc-200 dark:hover:bg-white/15"
             >
               Guardar
             </button>

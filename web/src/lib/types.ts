@@ -5,7 +5,8 @@ export type BuiltinCategory =
   | 'medicina'
   | 'ocio'
   | 'agenda'
-  | 'bano';
+  | 'bano'
+  | 'unknown';
 
 /** Alias kept for convenience — custom categories are plain strings */
 export type Category = BuiltinCategory;
@@ -114,6 +115,15 @@ export const CATEGORY_CONFIG: Record<
     border: 'border-amber-200 dark:border-amber-500/25',
     labelColor: 'text-amber-600 dark:text-amber-400',
   },
+  unknown: {
+    label: 'Desconocido',
+    color: '#71717a',
+    glowClass: 'glow-unknown',
+    emoji: '❓',
+    bg: 'bg-zinc-50 dark:bg-zinc-950/40',
+    border: 'border-zinc-200 dark:border-zinc-500/25',
+    labelColor: 'text-zinc-600 dark:text-zinc-400',
+  },
 };
 
 export const ALL_CATEGORIES: Category[] = [
@@ -124,4 +134,5 @@ export const ALL_CATEGORIES: Category[] = [
   'ocio',
   'agenda',
   'bano',
+  'unknown',
 ];
