@@ -217,7 +217,7 @@ export function RecordCard({ record, pending = false }: RecordCardProps) {
         <div className="flex flex-shrink-0 items-center gap-1.5">
           <span className="text-[11px] text-zinc-400 dark:text-zinc-600">
             {formatTime(
-              pending ? record.createdAt : (record.confirmedAt ?? record.createdAt),
+              record.createdAt,
               getEffectiveDuration(record)
             )}
           </span>

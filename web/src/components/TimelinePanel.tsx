@@ -32,7 +32,7 @@ function groupByDate(records: DiarioRecord[]): DayGroup[] {
   yesterday.setDate(yesterday.getDate() - 1);
 
   for (const record of records) {
-    const ts = record.confirmedAt ?? record.createdAt;
+    const ts = record.createdAt;
     const date = new Date(ts.seconds * 1000);
     const sortKey = localDateKey(date); // usa fecha local, no UTC
 
@@ -82,7 +82,7 @@ function recordSummary(r: DiarioRecord): string {
 }
 
 function recordTime(r: DiarioRecord): string {
-  const ts = r.confirmedAt ?? r.createdAt;
+  const ts = r.createdAt;
   if (!ts) return '';
   const start = new Date(ts.seconds * 1000);
   const fmt = (d: Date) => d.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
