@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { ALL_CATEGORIES, CATEGORY_CONFIG, ParsedData } from '@/lib/types';
 import {
@@ -79,6 +79,7 @@ export function AddRecordModal({ onClose }: AddRecordModalProps) {
   const [formData, setFormData] = useState<Partial<ParsedData>>({});
   const [notificar, setNotificar] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [confirmDeleteCat, setConfirmDeleteCat] = useState<string | null>(null);
 
   // New category form state
   const [newEmoji, setNewEmoji] = useState('📝');
@@ -95,6 +96,17 @@ export function AddRecordModal({ onClose }: AddRecordModalProps) {
 
   function setField(key: keyof ParsedData, value: string | number) {
     setFormData((p) => ({ ...p, [key]: value }));
+  }
+
+  async function handleDeleteCategory(id: string, e: React.MouseEvent) {
+    e.stopPropagation();
+    if (confirmDeleteCat !== id) {
+      setConfirmDeleteCat(id);
+      setTimeout(() => setConfirmDeleteCat(null), 3000);
+      return;
+    }
+    await deleteDoc(doc(db, 'categorias', id));
+    setConfirmDeleteCat(null);
   }
 
   async function handleCreateCategory() {
@@ -182,17 +194,29 @@ export function AddRecordModal({ onClose }: AddRecordModalProps) {
 
                 {/* Custom categories */}
                 {customCategories.map((cat) => (
-                  <button
-                    key={cat.id}
-                    onClick={() => pickCategory(cat.id)}
-                    className="flex flex-col items-center gap-1.5 rounded-xl border bg-zinc-50 dark:bg-white/5 p-3 text-center transition-all hover:scale-105 active:scale-95"
-                    style={{ borderColor: `${cat.color}40` }}
-                  >
-                    <span className="text-2xl">{cat.emoji}</span>
-                    <span className="text-[10px] leading-tight text-zinc-500 dark:text-zinc-400">
-                      {cat.label.split(' ')[0]}
-                    </span>
-                  </button>
+                  <div key={cat.id} className="group relative">
+                    <button
+                      onClick={() => pickCategory(cat.id)}
+                      className="flex w-full flex-col items-center gap-1.5 rounded-xl border bg-zinc-50 dark:bg-white/5 p-3 text-center transition-all hover:scale-105 active:scale-95"
+                      style={{ borderColor: `${cat.color}40` }}
+                    >
+                      <span className="text-2xl">{cat.emoji}</span>
+                      <span className="text-[10px] leading-tight text-zinc-500 dark:text-zinc-400">
+                        {cat.label.split(' ')[0]}
+                      </span>
+                    </button>
+                    <button
+                      onClick={(e) => handleDeleteCategory(cat.id, e)}
+                      className={`absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold transition-all ${
+                        confirmDeleteCat === cat.id
+                          ? 'bg-red-500 text-white opacity-100'
+                          : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400 opacity-0 group-hover:opacity-100'
+                      }`}
+                      title={confirmDeleteCat === cat.id ? '¿Confirmar?' : 'Eliminar categoría'}
+                    >
+                      ×
+                    </button>
+                  </div>
                 ))}
 
                 {/* Create new */}
