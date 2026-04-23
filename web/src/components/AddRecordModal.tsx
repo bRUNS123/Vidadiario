@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { addDoc, collection, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { ALL_CATEGORIES, CATEGORY_CONFIG, ParsedData } from '@/lib/types';
 import {
@@ -80,6 +80,9 @@ export function AddRecordModal({ onClose }: AddRecordModalProps) {
   const [notificar, setNotificar] = useState(false);
   const [saving, setSaving] = useState(false);
   const [confirmDeleteCat, setConfirmDeleteCat] = useState<string | null>(null);
+  const [recordDate, setRecordDate] = useState(() =>
+    new Date().toISOString().slice(0, 16) // "YYYY-MM-DDTHH:mm"
+  );
 
   // New category form state
   const [newEmoji, setNewEmoji] = useState('📝');
@@ -125,14 +128,15 @@ export function AddRecordModal({ onClose }: AddRecordModalProps) {
     if (!selectedCategory) return;
     setSaving(true);
     try {
+      const ts = Timestamp.fromDate(new Date(recordDate));
       await addDoc(collection(db, 'registros'), {
         category: selectedCategory,
         rawText: '',
         parsedData: formData,
         notificar: selectedCategory === 'agenda' && notificar,
         status: 'confirmed',
-        createdAt: serverTimestamp(),
-        confirmedAt: serverTimestamp(),
+        createdAt: ts,
+        confirmedAt: ts,
       });
       onClose();
     } catch (err) {
@@ -365,6 +369,20 @@ export function AddRecordModal({ onClose }: AddRecordModalProps) {
                   Agregar a Google Calendar
                 </label>
               )}
+
+              {/* Date/time picker */}
+              <div className="rounded-xl border border-zinc-100 dark:border-white/8 bg-zinc-50 dark:bg-white/5 px-3 py-2.5">
+                <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+                  Fecha y hora
+                </label>
+                <input
+                  type="datetime-local"
+                  value={recordDate}
+                  max={new Date().toISOString().slice(0, 16)}
+                  onChange={(e) => setRecordDate(e.target.value)}
+                  className="w-full bg-transparent text-sm text-zinc-900 dark:text-white outline-none [color-scheme:light] dark:[color-scheme:dark]"
+                />
+              </div>
 
               <button
                 onClick={handleSubmit}
