@@ -121,7 +121,7 @@ export function RecordCard({ record, pending = false }: RecordCardProps) {
   }, [editing]);
 
   const { getCatConfig, customCategories } = useCustomCategories();
-  const config = getCatConfig(record.category);
+  const config = getCatConfig(editing ? editCategory : record.category);
   const editFields = getEditFields(editCategory);
 
   function startEdit() {
