@@ -186,11 +186,22 @@ export function AddRecordModal({ onClose }: AddRecordModalProps) {
   const fields = selectedCategory
     ? (BUILTIN_FIELDS[selectedCategory] ?? CUSTOM_FIELDS)
     : [];
+  
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      if (step === 'fields' && !saving) {
+        handleSubmit();
+      } else if (step === 'create' && newLabel.trim() && !creating) {
+        handleCreateCategory();
+      }
+    }
+  };
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
       onClick={(e) => e.target === e.currentTarget && onClose()}
+      onKeyDown={handleKeyDown}
     >
       <div className="mx-4 w-full max-w-sm rounded-2xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl">
         {/* Header */}
