@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { addDoc, collection, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebase';
-import { BuiltinCategory, CATEGORY_CONFIG } from './types';
+import { BuiltinCategory, CATEGORY_CONFIG, FieldDef, BUILTIN_FIELDS } from './types';
 
 export interface CustomCategory {
   id: string;
@@ -11,6 +11,7 @@ export interface CustomCategory {
   emoji: string;
   color: string;
   hasDuration: boolean;
+  fields?: FieldDef[];
 }
 
 export interface CatConfig {
@@ -23,6 +24,7 @@ export interface CatConfig {
   labelColor: string;
   isCustom: boolean;
   needsCategorization?: boolean; // true when unresolved — show category picker
+  fields: FieldDef[];
 }
 
 const FALLBACK: CatConfig = {
@@ -35,11 +37,12 @@ const FALLBACK: CatConfig = {
   labelColor: '',
   isCustom: true,
   needsCategorization: true,
+  fields: [],
 };
 
 interface ContextValue {
   customCategories: CustomCategory[];
-  createCategory: (label: string, emoji: string, color: string, hasDuration: boolean) => Promise<string>;
+  createCategory: (label: string, emoji: string, color: string, hasDuration: boolean, fields?: FieldDef[]) => Promise<string>;
   getCatConfig: (category: string) => CatConfig;
 }
 
@@ -59,12 +62,13 @@ export function CustomCategoriesProvider({ children }: { children: ReactNode }) 
     return unsub;
   }, []);
 
-  async function createCategory(label: string, emoji: string, color: string, hasDuration: boolean): Promise<string> {
+  async function createCategory(label: string, emoji: string, color: string, hasDuration: boolean, fields: FieldDef[] = []): Promise<string> {
     const ref = await addDoc(collection(db, 'categorias'), {
       label,
       emoji,
       color,
       hasDuration,
+      fields,
       createdAt: serverTimestamp(),
     });
     return ref.id;
@@ -90,7 +94,8 @@ export function CustomCategoriesProvider({ children }: { children: ReactNode }) 
         ...cfg, 
         label: alias ? alias.label : cfg.label,
         emoji: alias ? alias.emoji : cfg.emoji,
-        isCustom: false 
+        isCustom: false,
+        fields: BUILTIN_FIELDS[targetCat] || [],
       };
     }
 
@@ -110,6 +115,9 @@ export function CustomCategoriesProvider({ children }: { children: ReactNode }) 
       border: '',
       labelColor: '',
       isCustom: true,
+      fields: custom.fields && custom.fields.length > 0 
+        ? custom.fields 
+        : [{ key: 'descripcion', label: 'Descripción', type: 'text', placeholder: 'Escribe algo...' }],
     };
   }
 

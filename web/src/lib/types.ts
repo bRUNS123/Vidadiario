@@ -24,8 +24,53 @@ export interface ParsedData {
   duracion?: number;   // minutos de duración para categorías sin campo propio
   evento?: string;
   hora?: string;
-  tipo?: 'pis' | 'caca';
+  tipo?: 'pis' | 'caca' | 'ducha' | 'tina';
+  [key: string]: any;
 }
+
+export type FieldDef = {
+  key: string;
+  label: string;
+  type: 'text' | 'number' | 'toggle';
+  placeholder?: string;
+  options?: { value: string; label: string; emoji: string }[];
+};
+
+export const BUILTIN_FIELDS: Record<string, FieldDef[]> = {
+  agua: [{ key: 'cantidad', label: 'Cantidad (ml)', type: 'number', placeholder: '500' }],
+  actividad: [
+    { key: 'nombre', label: 'Ejercicio', type: 'text', placeholder: 'Pesas, Correr...' },
+    { key: 'minutos', label: 'Duración (min)', type: 'number', placeholder: '45' },
+  ],
+  alimentacion: [
+    { key: 'descripcion', label: 'Qué comiste', type: 'text', placeholder: 'Ensalada César...' },
+  ],
+  medicina: [
+    { key: 'nombre', label: 'Medicamento', type: 'text', placeholder: 'Creatina...' },
+    { key: 'dosis', label: 'Dosis', type: 'text', placeholder: '5g, 10mg...' },
+  ],
+  ocio: [
+    { key: 'actividad', label: 'Actividad', type: 'text', placeholder: 'Series, Lectura...' },
+    { key: 'minutos', label: 'Duración (min)', type: 'number', placeholder: '60' },
+  ],
+  agenda: [
+    { key: 'evento', label: 'Evento', type: 'text', placeholder: 'Dentista...' },
+    { key: 'hora', label: 'Hora (HH:MM)', type: 'text', placeholder: '10:30' },
+  ],
+  bano: [
+    {
+      key: 'tipo',
+      label: 'Actividad',
+      type: 'toggle',
+      options: [
+        { value: 'pis', label: 'Pis', emoji: '💦' },
+        { value: 'caca', label: 'Caca', emoji: '💩' },
+        { value: 'ducha', label: 'Ducha', emoji: '🚿' },
+        { value: 'tina', label: 'Tina', emoji: '🛁' },
+      ],
+    },
+  ],
+};
 
 export interface DiarioRecord {
   id: string;

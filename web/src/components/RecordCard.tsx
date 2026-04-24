@@ -46,56 +46,6 @@ function getEffectiveDuration(record: DiarioRecord): number | undefined {
   return record.parsedData.minutos ?? record.parsedData.duracion;
 }
 
-type EditField = {
-  key: keyof ParsedData;
-  label: string;
-  type: 'text' | 'number' | 'toggle';
-  placeholder?: string;
-  options?: { value: string; label: string; emoji: string }[];
-};
-
-function getEditFields(category: Category): EditField[] {
-  switch (category) {
-    case 'agua':
-      return [{ key: 'cantidad', label: 'ml', type: 'number', placeholder: '500' }];
-    case 'actividad':
-      return [
-        { key: 'nombre', label: 'Ejercicio', type: 'text', placeholder: 'Pesas, Correr...' },
-        { key: 'minutos', label: 'Duración (min)', type: 'number', placeholder: '45' },
-      ];
-    case 'alimentacion':
-      return [{ key: 'descripcion', label: 'Descripción', type: 'text', placeholder: 'Ensalada, Pizza...' }];
-    case 'medicina':
-      return [
-        { key: 'nombre', label: 'Nombre', type: 'text', placeholder: 'Creatina...' },
-        { key: 'dosis', label: 'Dosis', type: 'text', placeholder: '5g, 10mg...' },
-      ];
-    case 'ocio':
-      return [
-        { key: 'actividad', label: 'Actividad', type: 'text', placeholder: 'Series, Juegos...' },
-        { key: 'minutos', label: 'Duración (min)', type: 'number', placeholder: '60' },
-      ];
-    case 'agenda':
-      return [
-        { key: 'evento', label: 'Evento', type: 'text', placeholder: 'Dentista...' },
-        { key: 'hora', label: 'Hora', type: 'text', placeholder: '10:30' },
-      ];
-    case 'bano':
-      return [{
-        key: 'tipo', label: 'Tipo', type: 'toggle',
-        options: [
-          { value: 'pis', label: 'Pis', emoji: '💦' },
-          { value: 'caca', label: 'Caca', emoji: '💩' },
-        ],
-      }];
-    default:
-      return [
-        { key: 'descripcion', label: 'Descripción', type: 'text', placeholder: 'Escribe algo...' },
-        { key: 'duracion', label: 'Duración (min)', type: 'number', placeholder: '30' },
-      ];
-  }
-}
-
 interface RecordCardProps {
   record: DiarioRecord;
   pending?: boolean;
@@ -109,20 +59,10 @@ export function RecordCard({ record, pending = false }: RecordCardProps) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [editCategory, setEditCategory] = useState<Category>(record.category as Category);
   const [saveAsRule, setSaveAsRule] = useState(false);
-  const [ruleMode, setRuleMode] = useState<'new' | 'existing'>('new');
-  const [selectedExistingRule, setSelectedExistingRule] = useState('');
-  const [existingRules, setExistingRules] = useState<{ id: string; text: string; category: string; parsedData: Partial<ParsedData> }[]>([]);
-
-  useEffect(() => {
-    if (!editing) return;
-    getDocs(collection(db, 'aliasMappings')).then((snap) =>
-      setExistingRules(snap.docs.map((d) => ({ id: d.id, ...d.data() } as any)))
-    );
-  }, [editing]);
 
   const { getCatConfig, customCategories } = useCustomCategories();
   const config = getCatConfig(editing ? editCategory : record.category);
-  const editFields = getEditFields(editCategory);
+  const editFields = config.fields;
 
   function startEdit() {
     setEditData({ ...record.parsedData });
@@ -148,22 +88,11 @@ export function RecordCard({ record, pending = false }: RecordCardProps) {
       
       if (saveAsRule && record.rawText) {
         const aliasId = record.rawText.toLowerCase().trim().replace(/[^a-z0-9áéíóúüñ\s]/g, '').replace(/\s+/g, '_');
-        if (ruleMode === 'existing' && selectedExistingRule) {
-          const base = existingRules.find((r) => r.id === selectedExistingRule);
-          if (base) {
-            await setDoc(doc(db, 'aliasMappings', aliasId), {
-              text: record.rawText.toLowerCase().trim(),
-              category: base.category,
-              parsedData: base.parsedData,
-            });
-          }
-        } else {
-          await setDoc(doc(db, 'aliasMappings', aliasId), {
-            text: record.rawText.toLowerCase().trim(),
-            category: finalCategory,
-            parsedData: finalParsedData,
-          });
-        }
+        await setDoc(doc(db, 'aliasMappings', aliasId), {
+          text: record.rawText.toLowerCase().trim(),
+          category: finalCategory,
+          parsedData: finalParsedData,
+        });
       }
 
       await updateDoc(doc(db, 'registros', record.id), {
@@ -330,52 +259,23 @@ export function RecordCard({ record, pending = false }: RecordCardProps) {
           )}
 
           {record.rawText && (
-            <div className="space-y-2 pt-1 pb-1">
-              {/* Toggle */}
-              <div className="flex items-center gap-2">
+            <div className="space-y-2 pt-2 pb-1 border-t border-zinc-100 dark:border-white/5 mt-3">
+              <label className="flex cursor-pointer items-start gap-2 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 p-2.5 transition-colors hover:bg-indigo-100 dark:hover:bg-indigo-500/20">
                 <input
                   type="checkbox"
-                  id={`rule-${record.id}`}
                   checked={saveAsRule}
-                  onChange={(e) => { setSaveAsRule(e.target.checked); setRuleMode('new'); setSelectedExistingRule(''); }}
-                  className="rounded border-zinc-300 dark:border-white/10"
+                  onChange={(e) => setSaveAsRule(e.target.checked)}
+                  className="mt-0.5 rounded border-indigo-300 text-indigo-600 focus:ring-indigo-500 dark:border-indigo-500/30 dark:bg-indigo-900/20"
                 />
-                <label htmlFor={`rule-${record.id}`} className="flex min-w-0 gap-1 text-[11px] text-zinc-500 dark:text-zinc-400 cursor-pointer">
-                  <span className="flex-shrink-0">Guardar regla para</span>
-                  <span className="truncate font-mono">"{record.rawText}"</span>
-                </label>
-              </div>
-
-              {/* Mode picker */}
-              {saveAsRule && (
-                <div className="ml-5 space-y-1.5">
-                  <label className="flex cursor-pointer items-center gap-2 text-[11px] text-zinc-500 dark:text-zinc-400">
-                    <input type="radio" name={`ruleMode-${record.id}`} checked={ruleMode === 'new'} onChange={() => setRuleMode('new')} className="accent-zinc-600" />
-                    Nueva regla (con la categoría seleccionada)
-                  </label>
-                  <label className="flex cursor-pointer items-center gap-2 text-[11px] text-zinc-500 dark:text-zinc-400">
-                    <input type="radio" name={`ruleMode-${record.id}`} checked={ruleMode === 'existing'} onChange={() => setRuleMode('existing')} className="accent-zinc-600" />
-                    Asociar con regla existente
-                  </label>
-                  {ruleMode === 'existing' && (
-                    <select
-                      value={selectedExistingRule}
-                      onChange={(e) => setSelectedExistingRule(e.target.value)}
-                      className="ml-4 w-[calc(100%-1rem)] rounded-md border border-zinc-200 dark:border-white/15 bg-white dark:bg-zinc-800 px-2 py-1 text-[11px] text-zinc-900 dark:text-white outline-none [color-scheme:light] dark:[color-scheme:dark]"
-                    >
-                      <option value="">Elegir regla...</option>
-                      {existingRules.map((r) => {
-                        const cfg = getCatConfig(r.category);
-                        return (
-                          <option key={r.id} value={r.id}>
-                            {cfg.emoji} {r.text}
-                          </option>
-                        );
-                      })}
-                    </select>
-                  )}
+                <div className="flex flex-col min-w-0">
+                  <span className="text-[12px] font-medium text-indigo-900 dark:text-indigo-200">
+                    ✨ Enseñar a la IA
+                  </span>
+                  <span className="text-[10px] text-indigo-600/80 dark:text-indigo-300/80 mt-0.5 leading-tight">
+                    La próxima vez que escribas <span className="font-mono bg-white/50 dark:bg-black/20 px-1 rounded">"{record.rawText}"</span> se asociará automáticamente a esta categoría.
+                  </span>
                 </div>
-              )}
+              </label>
             </div>
           )}
 

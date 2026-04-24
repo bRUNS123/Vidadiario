@@ -1,7 +1,7 @@
 import { Timestamp } from 'firebase-admin/firestore';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-export type Category = 'agua' | 'actividad' | 'alimentacion' | 'medicina' | 'ocio' | 'agenda' | 'bano' | 'unknown';
+export type Category = 'agua' | 'actividad' | 'alimentacion' | 'medicina' | 'ocio' | 'agenda' | 'bano' | 'unknown' | string;
 
 export interface ParsedData {
   nombre?: string;
@@ -120,10 +120,17 @@ export async function parseMessage(
     // Load aliases context if we need AI/Heuristic
     if (!category) {
       let aliases: any[] = [];
+      let customCategories: any[] = [];
       try {
-        const allAliasesFn = await db.collection('aliasMappings').get();
+        const [allAliasesFn, allCatsFn] = await Promise.all([
+          db.collection('aliasMappings').get(),
+          db.collection('categorias').get()
+        ]);
         aliases = allAliasesFn.docs.map(d => d.data());
-      } catch (e) {}
+        customCategories = allCatsFn.docs.map(d => ({ id: d.id, label: d.data().label, hasDuration: d.data().hasDuration }));
+      } catch (e) {
+        console.error('Error fetching context:', e);
+      }
 
       // 2. AI Fallback (if configured)
       if (process.env.GEMINI_API_KEY) {
@@ -132,11 +139,15 @@ export async function parseMessage(
           const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
           
           const prompt = `Analyze this user log message: "${trimmed}".
-Categorize it strictly into one of: agua, actividad, alimentacion, medicina, ocio, agenda, bano, unknown.
+Categorize it into one of the built-in categories OR a custom category ID.
+Built-in categories: agua, actividad, alimentacion, medicina, ocio, agenda, bano, unknown.
+Custom categories available:
+${JSON.stringify(customCategories, null, 2)}
+
 Return ONLY raw JSON, do NOT wrap in markdown.
-Available fields to extract depending on category:
+Expected JSON format:
 {
-  "category": "...",
+  "category": "category_id_or_builtin_name",
   "parsedData": {
     "cantidad": number,
     "unidad": "ml",
@@ -147,9 +158,11 @@ Available fields to extract depending on category:
     "actividad": "string",
     "evento": "string",
     "hora": "HH:MM",
-    "tipo": "pis" | "caca"
+    "tipo": "pis" | "caca",
+    "duracion": number
   }
 }
+If selecting a custom category, use its 'id' as the 'category' value, and extract any relevant information from the message into 'parsedData.descripcion'. If the custom category has hasDuration=true, also extract 'parsedData.duracion' in minutes if applicable.
 Reference these user-defined rules to infer their specific terminology mapping: ${JSON.stringify(aliases)}.`;
 
           const result = await model.generateContent(prompt);

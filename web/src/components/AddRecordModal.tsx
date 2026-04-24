@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { addDoc, collection, deleteDoc, doc, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { ALL_CATEGORIES, CATEGORY_CONFIG, ParsedData } from '@/lib/types';
+import { ALL_CATEGORIES, CATEGORY_CONFIG, ParsedData, FieldDef } from '@/lib/types';
 import {
   COLOR_OPTIONS,
   EMOJI_OPTIONS,
@@ -28,55 +28,6 @@ function Toggle({ on }: { on: boolean }) {
   );
 }
 
-// ── Field definitions for built-in categories ─────────────────────────────────
-
-type FieldDef = {
-  key: keyof ParsedData;
-  label: string;
-  type: 'text' | 'number' | 'toggle';
-  placeholder?: string;
-  options?: { value: string; label: string; emoji: string }[];
-};
-
-const BUILTIN_FIELDS: Record<string, FieldDef[]> = {
-  agua: [{ key: 'cantidad', label: 'Cantidad (ml)', type: 'number', placeholder: '500' }],
-  actividad: [
-    { key: 'nombre', label: 'Ejercicio', type: 'text', placeholder: 'Pesas, Correr...' },
-    { key: 'minutos', label: 'Duración (min)', type: 'number', placeholder: '45' },
-  ],
-  alimentacion: [
-    { key: 'descripcion', label: 'Qué comiste', type: 'text', placeholder: 'Ensalada César...' },
-  ],
-  medicina: [
-    { key: 'nombre', label: 'Medicamento', type: 'text', placeholder: 'Creatina...' },
-    { key: 'dosis', label: 'Dosis', type: 'text', placeholder: '5g, 10mg...' },
-  ],
-  ocio: [
-    { key: 'actividad', label: 'Actividad', type: 'text', placeholder: 'Series, Lectura...' },
-    { key: 'minutos', label: 'Duración (min)', type: 'number', placeholder: '60' },
-  ],
-  agenda: [
-    { key: 'evento', label: 'Evento', type: 'text', placeholder: 'Dentista...' },
-    { key: 'hora', label: 'Hora (HH:MM)', type: 'text', placeholder: '10:30' },
-  ],
-  bano: [
-    {
-      key: 'tipo',
-      label: 'Actividad',
-      type: 'toggle',
-      options: [
-        { value: 'pis', label: 'Pis', emoji: '💦' },
-        { value: 'caca', label: 'Caca', emoji: '💩' },
-        { value: 'ducha', label: 'Ducha', emoji: '🚿' },
-        { value: 'tina', label: 'Tina', emoji: '🛁' },
-      ],
-    },
-  ],
-};
-
-const CUSTOM_FIELDS: FieldDef[] = [
-  { key: 'descripcion', label: 'Descripción', type: 'text', placeholder: 'Escribe algo...' },
-];
 
 const BUILTIN_DEFAULTS: Record<string, Partial<ParsedData>> = {
   agua: { unidad: 'ml' },
@@ -183,9 +134,7 @@ export function AddRecordModal({ onClose }: AddRecordModalProps) {
   }
 
   const cfg = selectedCategory ? getCatConfig(selectedCategory) : null;
-  const fields = selectedCategory
-    ? (BUILTIN_FIELDS[selectedCategory] ?? CUSTOM_FIELDS)
-    : [];
+  const fields = cfg ? cfg.fields : [];
   
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
