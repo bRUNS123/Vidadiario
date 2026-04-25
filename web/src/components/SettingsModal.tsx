@@ -109,6 +109,7 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
         { label: 'Gaming', emoji: '🎮', color: '#a855f7', subcategories: ['Hots', 'LoL', 'TFT', 'Steam', 'YouTube', 'Twitch'] },
         { label: 'Aseo', emoji: '🚿', color: '#22c55e', subcategories: ['Ducha', 'Lavar Dientes', 'Baño', 'Skin Care'] },
         { label: 'Comida', emoji: '🍱', color: '#f59e0b', subcategories: ['Desayuno', 'Almuerzo', 'Cena', 'Snack', 'Fruta'] },
+        { label: 'Feedback', emoji: '📝', color: '#10b981', subcategories: ['Idea', 'Bug', 'Nota', 'Mejora'] },
       ];
 
       for (const t of templates) {

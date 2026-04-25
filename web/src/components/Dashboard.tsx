@@ -15,6 +15,7 @@ import { TimelinePanel } from './TimelinePanel';
 import { WeeklyPanel } from './WeeklyPanel';
 import { AddRecordModal } from './AddRecordModal';
 import { RulesModal } from './RulesModal';
+import { FeedbackModal } from './FeedbackModal';
 import { SettingsModal } from './SettingsModal';
 
 const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
@@ -25,6 +26,7 @@ export function Dashboard() {
   const [loading, setLoading] = useState(!DEMO_MODE);
   const [showModal, setShowModal] = useState(false);
   const [showRules, setShowRules] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [viewMode, setViewMode] = useState<'timeline' | 'weekly'>('timeline');
   const { isDark, toggle } = useTheme();
@@ -126,17 +128,23 @@ export function Dashboard() {
 
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setShowSettings(true)}
-            className="flex items-center justify-center rounded-lg border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-white/5 w-8 h-8 text-[12px] transition-all hover:bg-zinc-100 dark:hover:bg-white/10"
-            title="Configuración y Telegram"
+            onClick={() => setShowFeedback(true)}
+            className="flex items-center gap-1.5 rounded-lg border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-white/5 px-3 py-1.5 text-[11px] font-medium text-zinc-600 dark:text-zinc-300 transition-all hover:bg-zinc-100 dark:hover:bg-white/10"
+            title="Insights & Feedback"
           >
-            ⚙️
+            <span>✨</span> <span className="hidden sm:inline">Feedback</span>
           </button>
           <button
             onClick={() => setShowRules(true)}
-            className="flex items-center gap-1.5 rounded-lg border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-white/5 px-3 py-1.5 text-[12px] font-medium text-zinc-600 dark:text-zinc-300 transition-all hover:bg-zinc-100 dark:hover:bg-white/10"
+            className="flex items-center gap-1.5 rounded-lg border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-white/5 px-3 py-1.5 text-[11px] font-medium text-zinc-600 dark:text-zinc-300 transition-all hover:bg-zinc-100 dark:hover:bg-white/10"
           >
-            🗂️ Reglas
+            <span>⚖️</span> <span className="hidden sm:inline">Reglas</span>
+          </button>
+          <button
+            onClick={() => setShowSettings(true)}
+            className="rounded-lg border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-white/5 p-1.5 text-zinc-600 dark:text-zinc-300 transition-all hover:bg-zinc-100 dark:hover:bg-white/10"
+          >
+            ⚙️
           </button>
           <button
             onClick={() => setShowModal(true)}
@@ -168,6 +176,7 @@ export function Dashboard() {
 
       {showModal && <AddRecordModal onClose={() => setShowModal(false)} />}
       {showRules && <RulesModal onClose={() => setShowRules(false)} />}
+      {showFeedback && <FeedbackModal onClose={() => setShowFeedback(false)} />}
       {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
     </div>
   );
