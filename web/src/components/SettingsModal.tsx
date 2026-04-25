@@ -112,8 +112,14 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
         { label: 'Feedback', emoji: '📝', color: '#10b981', subcategories: ['Idea', 'Bug', 'Nota', 'Mejora'] },
       ];
 
+      // 0. Obtener categorías existentes para evitar duplicados
+      const existingSnap = await getDocs(query(collection(db, 'categorias'), where('userId', '==', user.uid)));
+      const existingLabels = new Set(existingSnap.docs.map(d => d.data().label.toLowerCase()));
+
       for (const t of templates) {
-        await setDoc(doc(collection(db, 'categorias')), {
+        if (existingLabels.has(t.label.toLowerCase())) continue;
+        
+        await addDoc(collection(db, 'categorias'), {
           ...t,
           hasDuration: false,
           fields: [],
@@ -122,7 +128,7 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
         });
       }
 
-      setMessage('✅ Categorías recomendadas creadas. Recarga para ver los cambios.');
+      setMessage('✅ Categorías actualizadas. Recarga para ver los cambios.');
       setTimeout(() => window.location.reload(), 2000);
     } catch (err) {
       console.error(err);

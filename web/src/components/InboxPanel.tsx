@@ -23,16 +23,16 @@ export function InboxPanel({ records, onAdd }: InboxPanelProps) {
     setIsParsing(true);
     try {
       const getAliases = async () => {
-        const snap = await getDocs(query(collection(db, 'aliasMappings'), where('userId', '==', user.uid)));
+        const snap = await getDocs(query(collection(db, 'aliasMappings'), where('userId', '==', user!.uid)));
         return snap.docs.map(d => d.data());
       };
 
       const getCategories = async () => {
-        const snap = await getDocs(query(collection(db, 'categorias'), where('userId', '==', user.uid)));
+        const snap = await getDocs(query(collection(db, 'categorias'), where('userId', '==', user!.uid)));
         return snap.docs.map(d => ({ id: d.id, ...d.data() }));
       };
 
-      const parsed = await parseMessage(quickText, { getAliases, getCategories }, user.uid);
+      const parsed = await parseMessage(quickText, { getAliases, getCategories }, user!.uid);
       if (parsed) {
         // Remove undefined values for Firestore
         const cleanData = JSON.parse(JSON.stringify(parsed));
