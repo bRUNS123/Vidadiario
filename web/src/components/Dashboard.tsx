@@ -71,7 +71,7 @@ export function Dashboard() {
   return (
     <div className="flex h-screen flex-col overflow-hidden">
       {/* Top header */}
-      <header className="flex flex-shrink-0 items-center justify-between border-b border-zinc-200 dark:border-white/5 bg-white dark:bg-zinc-950 px-5 py-3">
+      <header className="relative flex flex-shrink-0 items-center justify-between border-b border-zinc-200 dark:border-white/5 bg-white dark:bg-zinc-950 px-5 py-3">
         <div className="flex items-center gap-2">
           <span className="text-base">📓</span>
           <h1 className="text-sm font-semibold text-zinc-900 dark:text-white">Diario AG <span className="text-blue-500">●</span></h1>
@@ -83,7 +83,7 @@ export function Dashboard() {
         </div>
 
         {/* View Toggle */}
-        <div className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center rounded-xl bg-zinc-100 dark:bg-white/5 p-1 border border-zinc-200 dark:border-white/10">
+        <div className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center rounded-xl bg-zinc-100 dark:bg-white/5 p-1 border border-zinc-200 dark:border-white/10 z-10">
           <button
             onClick={() => setViewMode('timeline')}
             className={`flex items-center gap-1.5 px-4 py-1.5 text-[11px] font-semibold rounded-lg transition-all ${
