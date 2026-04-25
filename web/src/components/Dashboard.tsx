@@ -83,26 +83,44 @@ export function Dashboard() {
         </div>
 
         {/* View Toggle */}
-        <div className="flex items-center rounded-xl bg-zinc-100 dark:bg-white/5 p-1 mx-4">
+        <div className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center rounded-xl bg-zinc-100 dark:bg-white/5 p-1 border border-zinc-200 dark:border-white/10">
           <button
             onClick={() => setViewMode('timeline')}
-            className={`px-3 py-1 text-[11px] font-medium rounded-lg transition-all ${
+            className={`flex items-center gap-1.5 px-4 py-1.5 text-[11px] font-semibold rounded-lg transition-all ${
               viewMode === 'timeline'
-                ? 'bg-white dark:bg-white/10 text-zinc-900 dark:text-white shadow-sm'
+                ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-md border border-zinc-200 dark:border-white/10'
                 : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
             }`}
           >
-            Timeline
+            <span>📜</span> Timeline
           </button>
           <button
             onClick={() => setViewMode('weekly')}
-            className={`px-3 py-1 text-[11px] font-medium rounded-lg transition-all ${
+            className={`flex items-center gap-1.5 px-4 py-1.5 text-[11px] font-semibold rounded-lg transition-all ${
               viewMode === 'weekly'
-                ? 'bg-white dark:bg-white/10 text-zinc-900 dark:text-white shadow-sm'
+                ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-md border border-zinc-200 dark:border-white/10'
                 : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
             }`}
           >
-            Semanal
+            <span>📊</span> Semanal
+          </button>
+        </div>
+
+        {/* Mobile View Toggle (visible on small screens) */}
+        <div className="md:hidden flex items-center rounded-lg bg-zinc-100 dark:bg-white/5 p-0.5">
+          <button
+            onClick={() => setViewMode('timeline')}
+            className={`p-1.5 rounded-md ${viewMode === 'timeline' ? 'bg-white dark:bg-zinc-800 shadow-sm' : ''}`}
+            title="Timeline"
+          >
+            📜
+          </button>
+          <button
+            onClick={() => setViewMode('weekly')}
+            className={`p-1.5 rounded-md ${viewMode === 'weekly' ? 'bg-white dark:bg-zinc-800 shadow-sm' : ''}`}
+            title="Semanal"
+          >
+            📊
           </button>
         </div>
 
