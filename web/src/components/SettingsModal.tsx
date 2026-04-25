@@ -15,6 +15,7 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [migrating, setMigrating] = useState(false);
+  const [initializing, setInitializing] = useState(false);
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -91,6 +92,41 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
       setMessage('❌ Error al migrar. Revisa la consola.');
     } finally {
       setMigrating(false);
+    }
+  }
+
+  async function handleInitCategories() {
+    if (!user) return;
+    if (!window.confirm('¿Quieres inicializar las categorías recomendadas (Líquidos, Gaming, Aseo, Comida) con sus subcategorías?')) return;
+
+    setInitializing(true);
+    setMessage('⏳ Creando categorías...');
+
+    try {
+      const templates = [
+        { label: 'Líquidos', emoji: '💧', color: '#3b82f6', subcategories: ['Agua', 'Café', 'Té', 'Mate', 'Jugo', 'Soda'] },
+        { label: 'Gaming', emoji: '🎮', color: '#a855f7', subcategories: ['Hots', 'LoL', 'TFT', 'Steam', 'YouTube', 'Twitch'] },
+        { label: 'Aseo', emoji: '🚿', color: '#22c55e', subcategories: ['Ducha', 'Lavar Dientes', 'Baño', 'Skin Care'] },
+        { label: 'Comida', emoji: '🍱', color: '#f59e0b', subcategories: ['Desayuno', 'Almuerzo', 'Cena', 'Snack', 'Fruta'] },
+      ];
+
+      for (const t of templates) {
+        await setDoc(doc(collection(db, 'categorias')), {
+          ...t,
+          hasDuration: false,
+          fields: [],
+          userId: user.uid,
+          createdAt: new Date(),
+        });
+      }
+
+      setMessage('✅ Categorías recomendadas creadas. Recarga para ver los cambios.');
+      setTimeout(() => window.location.reload(), 2000);
+    } catch (err) {
+      console.error(err);
+      setMessage('❌ Error al crear categorías');
+    } finally {
+      setInitializing(false);
     }
   }
 
@@ -174,6 +210,25 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
                 {message}
               </p>
             )}
+
+            <hr className="border-zinc-200 dark:border-white/5 my-4" />
+
+            {/* Smart Setup */}
+            <div className="space-y-3">
+              <h3 className="text-[13px] font-semibold text-zinc-900 dark:text-white flex items-center gap-1.5">
+                <span>✨</span> Configuración Inteligente
+              </h3>
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                Crea automáticamente categorías genéricas basadas en tus hábitos (Líquidos, Gaming, Aseo, etc) con subcategorías pre-configuradas.
+              </p>
+              <button
+                onClick={handleInitCategories}
+                disabled={initializing}
+                className="w-full rounded-lg bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 px-4 py-2.5 text-sm font-medium text-zinc-900 dark:text-white transition-all hover:bg-zinc-200 dark:hover:bg-white/10 active:scale-95 disabled:opacity-50"
+              >
+                {initializing ? 'Creando...' : 'Inicializar Categorías Recomendadas'}
+              </button>
+            </div>
             
             {user?.email === 'bfrancosentis@gmail.com' && (
               <div className="mt-8 pt-4 border-t border-red-100 dark:border-red-900/30">
