@@ -12,6 +12,7 @@ import { AuthProvider, useAuth } from '@/lib/auth-context';
 import { Login } from './Login';
 import { InboxPanel } from './InboxPanel';
 import { TimelinePanel } from './TimelinePanel';
+import { WeeklyPanel } from './WeeklyPanel';
 import { AddRecordModal } from './AddRecordModal';
 import { RulesModal } from './RulesModal';
 import { SettingsModal } from './SettingsModal';
@@ -25,6 +26,7 @@ export function Dashboard() {
   const [showModal, setShowModal] = useState(false);
   const [showRules, setShowRules] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [viewMode, setViewMode] = useState<'timeline' | 'weekly'>('timeline');
   const { isDark, toggle } = useTheme();
   const { user, logout } = useAuth();
 
@@ -79,6 +81,31 @@ export function Dashboard() {
             </span>
           )}
         </div>
+
+        {/* View Toggle */}
+        <div className="flex items-center rounded-xl bg-zinc-100 dark:bg-white/5 p-1 mx-4">
+          <button
+            onClick={() => setViewMode('timeline')}
+            className={`px-3 py-1 text-[11px] font-medium rounded-lg transition-all ${
+              viewMode === 'timeline'
+                ? 'bg-white dark:bg-white/10 text-zinc-900 dark:text-white shadow-sm'
+                : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
+            }`}
+          >
+            Timeline
+          </button>
+          <button
+            onClick={() => setViewMode('weekly')}
+            className={`px-3 py-1 text-[11px] font-medium rounded-lg transition-all ${
+              viewMode === 'weekly'
+                ? 'bg-white dark:bg-white/10 text-zinc-900 dark:text-white shadow-sm'
+                : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
+            }`}
+          >
+            Semanal
+          </button>
+        </div>
+
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowSettings(true)}
@@ -113,7 +140,12 @@ export function Dashboard() {
       <div className="flex flex-1 overflow-hidden">
         <InboxPanel records={pending} onAdd={() => setShowModal(true)} />
         <div className="w-px flex-shrink-0 bg-zinc-200 dark:bg-white/5" />
-        <TimelinePanel records={confirmed} />
+        
+        {viewMode === 'timeline' ? (
+          <TimelinePanel records={confirmed} />
+        ) : (
+          <WeeklyPanel records={confirmed} />
+        )}
       </div>
 
       {showModal && <AddRecordModal onClose={() => setShowModal(false)} />}
