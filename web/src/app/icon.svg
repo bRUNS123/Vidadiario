@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#09090b"/>
+  <rect x="128" y="96" width="256" height="320" rx="24" fill="#ffffff"/>
+  <line x1="184" y1="176" x2="328" y2="176" stroke="#09090b" stroke-width="24" stroke-linecap="round"/>
+  <line x1="184" y1="256" x2="328" y2="256" stroke="#09090b" stroke-width="24" stroke-linecap="round"/>
+  <line x1="184" y1="336" x2="280" y2="336" stroke="#09090b" stroke-width="24" stroke-linecap="round"/>
+  <!-- Binding rings -->
+  <circle cx="104" cy="144" r="20" fill="#a1a1aa"/>
+  <circle cx="104" cy="256" r="20" fill="#a1a1aa"/>
+  <circle cx="104" cy="368" r="20" fill="#a1a1aa"/>
+</svg>
