@@ -12,6 +12,7 @@ export type Category = 'agua' | 'actividad' | 'alimentacion' | 'medicina' | 'oci
   evento?: string;
   hora?: string;
   duracion?: number;
+  subcategory?: string;
 }
 
 export interface ParsedRecord {
@@ -22,6 +23,7 @@ export interface ParsedRecord {
   status: 'pending';
   userId?: string;
   telegramMessageId?: number;
+  subcategory?: string | null;
 }
 
 export async function parseMessage(
