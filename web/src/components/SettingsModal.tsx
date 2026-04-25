@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, getDocs, updateDoc, writeBatch } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/lib/auth-context';
 
@@ -14,6 +14,7 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
   const [telegramId, setTelegramId] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [migrating, setMigrating] = useState(false);
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -49,6 +50,47 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
       setMessage('❌ Error al vincular Telegram');
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleMigrate() {
+    if (!user || user.email !== 'bfrancosentis@gmail.com') return;
+    
+    if (!window.confirm('¿Estás seguro de que quieres migrar todos los datos antiguos (huérfanos) a esta cuenta?')) return;
+    
+    setMigrating(true);
+    setMessage('⏳ Migrando datos, por favor no cierres esta ventana...');
+    
+    try {
+      let count = 0;
+      const collections = ['registros', 'categorias', 'aliasMappings'];
+      
+      for (const col of collections) {
+        const snap = await getDocs(collection(db, col));
+        const batch = writeBatch(db);
+        let batchCount = 0;
+        
+        snap.forEach((d) => {
+          const data = d.data();
+          if (!data.userId) {
+            batch.update(d.ref, { userId: user.uid });
+            batchCount++;
+            count++;
+          }
+        });
+        
+        if (batchCount > 0) {
+          await batch.commit();
+        }
+      }
+      
+      setMessage(`✅ ¡Migración completada! Se asignaron ${count} documentos a tu cuenta.`);
+      setTimeout(() => window.location.reload(), 3000);
+    } catch (error) {
+      console.error(error);
+      setMessage('❌ Error al migrar. Revisa la consola.');
+    } finally {
+      setMigrating(false);
     }
   }
 
@@ -131,6 +173,22 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
               <p className={`text-[12px] mt-1 ${message.includes('✅') ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                 {message}
               </p>
+            )}
+            
+            {user?.email === 'bfrancosentis@gmail.com' && (
+              <div className="mt-8 pt-4 border-t border-red-100 dark:border-red-900/30">
+                <h3 className="text-[13px] font-semibold text-red-600 dark:text-red-400 mb-2">Zona de Administrador</h3>
+                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mb-3">
+                  Si creaste registros, reglas o categorías antes de tener sistema de usuarios, pulsa este botón para asignarlos a tu cuenta actual.
+                </p>
+                <button
+                  onClick={handleMigrate}
+                  disabled={migrating}
+                  className="w-full rounded-lg bg-red-500/10 border border-red-500/20 px-4 py-2 text-sm font-semibold text-red-600 dark:text-red-400 transition-all hover:bg-red-500/20 active:scale-95 disabled:opacity-50"
+                >
+                  {migrating ? 'Migrando...' : 'Migrar Datos Antiguos a esta Cuenta'}
+                </button>
+              </div>
             )}
           </div>
         </div>
