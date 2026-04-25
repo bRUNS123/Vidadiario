@@ -122,9 +122,9 @@ export function RulesModal({ onClose }: RulesModalProps) {
         {/* Header */}
         <div className="flex flex-shrink-0 items-center justify-between border-b border-zinc-100 dark:border-white/5 px-5 py-4">
           <div>
-            <h2 className="text-sm font-semibold text-zinc-900 dark:text-white">Reglas de reconocimiento</h2>
+            <h2 className="text-sm font-semibold text-zinc-900 dark:text-white">Reglas y Prefijos</h2>
             <p className="mt-0.5 text-[11px] text-zinc-400">
-              {rules.length} regla{rules.length !== 1 ? 's' : ''} · el bot las usa para entender tus atajos
+              Usa <strong>-prefijo</strong> para forzar una categoría (ej: -comida Pizza).
             </p>
           </div>
           <button onClick={onClose} className="text-lg leading-none text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">×</button>

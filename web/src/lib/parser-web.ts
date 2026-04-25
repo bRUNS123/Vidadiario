@@ -38,8 +38,10 @@ export async function parseMessage(
   const trimmed = text.trim();
   const notificar = trimmed.startsWith('!');
   const isCommand = trimmed.startsWith('+') || trimmed.startsWith('!');
+  const isPrefixForce = trimmed.startsWith('-');
 
-  let category: Category | undefined;
+  let category: string | undefined;
+  let subcategory: string | null = null;
   let parsedData: ParsedData = {};
 
   if (isCommand) {
@@ -126,8 +128,37 @@ export async function parseMessage(
       category = exact.category as Category;
       parsedData = exact.parsedData || {};
     }
+  } 
+  
+  // ── Handle category prefix force (e.g. -comida Pizza) ──
+  else if (isPrefixForce) {
+    const spaceIndex = trimmed.indexOf(' ');
+    const prefix = trimmed.slice(1, spaceIndex !== -1 ? spaceIndex : undefined).toLowerCase();
+    const remainingText = spaceIndex !== -1 ? trimmed.slice(spaceIndex + 1).trim() : '';
 
-    // 2. AI Fallback
+    const cats = dbParams?.getCategories ? await dbParams.getCategories() : [];
+    const aliases = dbParams?.getAliases ? await dbParams.getAliases() : [];
+
+    const matchedCat = cats.find(c => c.label.toLowerCase() === prefix || c.id === prefix);
+    const matchedAlias = aliases.find(a => a.text.toLowerCase() === prefix);
+
+    if (matchedCat) {
+      const result = await parseMessage(remainingText, dbParams, userId, messageId);
+      if (result) {
+        result.category = matchedCat.id as any;
+        return result;
+      }
+    } else if (matchedAlias) {
+      const result = await parseMessage(remainingText, dbParams, userId, messageId);
+      if (result) {
+        result.category = matchedAlias.category as any;
+        result.parsedData = { ...(matchedAlias.parsedData || {}), ...result.parsedData };
+        return result;
+      }
+    }
+  }
+
+  // 2. AI Fallback
     if (!category) {
       try {
         const prompt = `Analyze this user log message: "${trimmed}".

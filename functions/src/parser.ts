@@ -40,6 +40,7 @@ export async function parseMessage(
   const trimmed = text.trim();
   const notificar = trimmed.startsWith('!');
   const isCommand = trimmed.startsWith('+') || trimmed.startsWith('!');
+  const isPrefixForce = trimmed.startsWith('-');
 
   let category: Category | undefined;
   let parsedData: ParsedData = {};
@@ -100,6 +101,42 @@ export async function parseMessage(
           hora: isHora ? citaLast : undefined,
         };
         break;
+    }
+  }
+
+    }
+  }
+
+  // ── Handle category prefix force (e.g. -comida Pizza) ──
+  else if (isPrefixForce) {
+    const spaceIndex = trimmed.indexOf(' ');
+    const prefix = trimmed.slice(1, spaceIndex !== -1 ? spaceIndex : undefined).toLowerCase();
+    const remainingText = spaceIndex !== -1 ? trimmed.slice(spaceIndex + 1).trim() : '';
+
+    const [allCatsSnap, allAliasesSnap] = await Promise.all([
+      userId ? db.collection('categorias').where('userId', '==', userId).get() : db.collection('categorias').get(),
+      userId ? db.collection('aliasMappings').where('userId', '==', userId).get() : db.collection('aliasMappings').get()
+    ]);
+
+    const cats = allCatsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const aliases = allAliasesSnap.docs.map(d => d.data());
+
+    const matchedCat = cats.find(c => (c as any).label.toLowerCase() === prefix || c.id === prefix);
+    const matchedAlias = aliases.find(a => a.text.toLowerCase() === prefix);
+
+    if (matchedCat) {
+      const result = await parseMessage(remainingText, db, userId, messageId);
+      if (result) {
+        result.category = matchedCat.id;
+        return result;
+      }
+    } else if (matchedAlias) {
+      const result = await parseMessage(remainingText, db, userId, messageId);
+      if (result) {
+        result.category = matchedAlias.category;
+        result.parsedData = { ...(matchedAlias.parsedData || {}), ...result.parsedData };
+        return result;
+      }
     }
   }
 
