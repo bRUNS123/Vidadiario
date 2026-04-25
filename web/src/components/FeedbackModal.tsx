@@ -5,6 +5,7 @@ import { collection, query, where, getDocs, limit, orderBy, updateDoc, doc, dele
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/lib/auth-context';
 import { DiarioRecord } from '@/lib/types';
+import { useCustomCategories } from '@/lib/custom-categories';
 
 interface FeedbackModalProps {
   onClose: () => void;
