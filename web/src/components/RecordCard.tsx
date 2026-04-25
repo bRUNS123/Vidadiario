@@ -5,6 +5,7 @@ import { collection, deleteDoc, doc, getDocs, setDoc, Timestamp, updateDoc } fro
 import { db } from '@/lib/firebase';
 import { Category, DiarioRecord, ParsedData, ALL_CATEGORIES, CATEGORY_CONFIG } from '@/lib/types';
 import { useCustomCategories } from '@/lib/custom-categories';
+import { useAuth } from '@/lib/auth-context';
 
 function formatSummary(record: DiarioRecord): string {
   const { parsedData, category } = record;
@@ -59,6 +60,7 @@ export function RecordCard({ record, pending = false }: RecordCardProps) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [editCategory, setEditCategory] = useState<Category>(record.category as Category);
   const [saveAsRule, setSaveAsRule] = useState(false);
+  const { user } = useAuth();
 
   const { getCatConfig, customCategories } = useCustomCategories();
   const config = getCatConfig(editing ? editCategory : record.category);
@@ -92,6 +94,7 @@ export function RecordCard({ record, pending = false }: RecordCardProps) {
           text: record.rawText.toLowerCase().trim(),
           category: finalCategory,
           parsedData: finalParsedData,
+          userId: user?.uid || record.userId,
         });
       }
 

@@ -50,26 +50,38 @@ export const telegramWebhook = onRequest(
       });
     }
 
-    // Optional: restrict to allowed user IDs
-    const allowedIds = process.env.ALLOWED_TELEGRAM_USER_IDS?.split(',').map((s) => s.trim());
-    if (allowedIds?.length && message.from && !allowedIds.includes(String(message.from.id))) {
+    const chatId = String(message.chat.id);
+
+    if (message.text.trim() === '/start') {
+      await reply(`¡Bienvenido a Diario AG! 🚀\n\nTu Código de Vinculación de Telegram es:\n\`${chatId}\`\n\nCopia este código y pégalo en Configuración > Vincular con Telegram dentro del Dashboard Web para comenzar a guardar registros en tu cuenta.`);
       res.status(200).send('OK');
       return;
     }
+
+    const linkedSnap = await db.collection('telegram_users').doc(chatId).get();
+    
+    if (!linkedSnap.exists) {
+      await reply(`⚠️ Tu cuenta no está vinculada.\nTu Código de Vinculación es:\n\`${chatId}\`\nIngrésalo en la Configuración de tu Dashboard Web.`);
+      res.status(200).send('OK');
+      return;
+    }
+
+    const userId = linkedSnap.data()?.userId;
 
     const parsed = await parseMessage(
       message.text,
       db,
-      message.from ? String(message.from.id) : undefined,
+      userId,
       message.message_id
     );
 
     if (!parsed) {
-      // This should theoretically only happen if it's completely empty or somehow failed internally
       await reply('⚠️ No se pudo procesar el mensaje.');
       res.status(200).send('OK');
       return;
     }
+
+    parsed.userId = userId;
 
     await db.collection('registros').add(parsed);
     if (parsed.category === 'unknown') {

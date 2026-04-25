@@ -107,7 +107,10 @@ export async function parseMessage(
     
     // 1. Try exact exact rule match
     try {
-      const aliasDoc = await db.collection('aliasMappings').where('text', '==', rawLower).limit(1).get();
+      const aliasQuery = userId 
+        ? db.collection('aliasMappings').where('userId', '==', userId).where('text', '==', rawLower).limit(1)
+        : db.collection('aliasMappings').where('text', '==', rawLower).limit(1);
+      const aliasDoc = await aliasQuery.get();
       if (!aliasDoc.empty) {
         const aliasData = aliasDoc.docs[0].data();
         category = aliasData.category as Category;
@@ -123,8 +126,8 @@ export async function parseMessage(
       let customCategories: any[] = [];
       try {
         const [allAliasesFn, allCatsFn] = await Promise.all([
-          db.collection('aliasMappings').get(),
-          db.collection('categorias').get()
+          userId ? db.collection('aliasMappings').where('userId', '==', userId).get() : db.collection('aliasMappings').get(),
+          userId ? db.collection('categorias').where('userId', '==', userId).get() : db.collection('categorias').get()
         ]);
         aliases = allAliasesFn.docs.map(d => d.data());
         customCategories = allCatsFn.docs.map(d => ({ id: d.id, label: d.data().label, hasDuration: d.data().hasDuration }));

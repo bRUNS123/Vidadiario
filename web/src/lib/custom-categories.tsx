@@ -1,9 +1,10 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { addDoc, collection, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { addDoc, collection, onSnapshot, query, where, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebase';
 import { BuiltinCategory, CATEGORY_CONFIG, FieldDef, BUILTIN_FIELDS } from './types';
+import { useAuth } from './auth-context';
 
 export interface CustomCategory {
   id: string;
@@ -54,21 +55,30 @@ const Ctx = createContext<ContextValue>({
 
 export function CustomCategoriesProvider({ children }: { children: ReactNode }) {
   const [customCategories, setCustomCategories] = useState<CustomCategory[]>([]);
+  const { user } = useAuth();
 
   useEffect(() => {
-    const unsub = onSnapshot(collection(db, 'categorias'), (snap) => {
+    if (!user) {
+      setCustomCategories([]);
+      return;
+    }
+
+    const q = query(collection(db, 'categorias'), where('userId', '==', user.uid));
+    const unsub = onSnapshot(q, (snap) => {
       setCustomCategories(snap.docs.map((d) => ({ id: d.id, ...d.data() } as CustomCategory)));
     });
     return unsub;
-  }, []);
+  }, [user]);
 
   async function createCategory(label: string, emoji: string, color: string, hasDuration: boolean, fields: FieldDef[] = []): Promise<string> {
+    if (!user) throw new Error("Usuario no autenticado");
     const ref = await addDoc(collection(db, 'categorias'), {
       label,
       emoji,
       color,
       hasDuration,
       fields,
+      userId: user.uid,
       createdAt: serverTimestamp(),
     });
     return ref.id;

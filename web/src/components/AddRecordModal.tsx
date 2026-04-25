@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { addDoc, collection, deleteDoc, doc, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { ALL_CATEGORIES, CATEGORY_CONFIG, ParsedData, FieldDef } from '@/lib/types';
+import { useAuth } from '@/lib/auth-context';
 import {
   COLOR_OPTIONS,
   EMOJI_OPTIONS,
@@ -66,6 +67,7 @@ export function AddRecordModal({ onClose }: AddRecordModalProps) {
   const [recordDate, setRecordDate] = useState(localNow);
   const [hasDuration, setHasDuration] = useState(false);
   const [durationMins, setDurationMins] = useState('');
+  const { user } = useAuth();
 
   // New category form state
   const [newEmoji, setNewEmoji] = useState('📝');
@@ -112,12 +114,13 @@ export function AddRecordModal({ onClose }: AddRecordModalProps) {
   }
 
   async function handleSubmit() {
-    if (!selectedCategory) return;
+    if (!selectedCategory || !user) return;
     setSaving(true);
     try {
       const ts = Timestamp.fromDate(new Date(recordDate));
       const extraParsed = hasDuration && durationMins ? { duracion: Number(durationMins) } : {};
       await addDoc(collection(db, 'registros'), {
+        userId: user.uid,
         category: selectedCategory,
         rawText: '',
         parsedData: { ...formData, ...extraParsed },

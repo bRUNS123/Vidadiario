@@ -8,10 +8,13 @@ import { DiarioRecord } from '@/lib/types';
 import { MOCK_CONFIRMED, MOCK_PENDING } from '@/lib/mock-data';
 import { useTheme } from '@/lib/use-theme';
 import { CustomCategoriesProvider } from '@/lib/custom-categories';
+import { AuthProvider, useAuth } from '@/lib/auth-context';
+import { Login } from './Login';
 import { InboxPanel } from './InboxPanel';
 import { TimelinePanel } from './TimelinePanel';
 import { AddRecordModal } from './AddRecordModal';
 import { RulesModal } from './RulesModal';
+import { SettingsModal } from './SettingsModal';
 
 const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
 
@@ -21,18 +24,22 @@ export function Dashboard() {
   const [loading, setLoading] = useState(!DEMO_MODE);
   const [showModal, setShowModal] = useState(false);
   const [showRules, setShowRules] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const { isDark, toggle } = useTheme();
+  const { user, logout } = useAuth();
 
   useEffect(() => {
-    if (DEMO_MODE) return;
+    if (DEMO_MODE || !user) return;
 
     const pendingQ = query(
       collection(db, 'registros'),
+      where('userId', '==', user.uid),
       where('status', '==', 'pending'),
       orderBy('createdAt', 'desc')
     );
     const confirmedQ = query(
       collection(db, 'registros'),
+      where('userId', '==', user.uid),
       where('status', '==', 'confirmed'),
       limit(200)
     );
@@ -49,7 +56,7 @@ export function Dashboard() {
     });
 
     return () => { unsubPending(); unsubConfirmed(); };
-  }, []);
+  }, [user]);
 
   if (loading) {
     return (
@@ -73,6 +80,13 @@ export function Dashboard() {
           )}
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowSettings(true)}
+            className="flex items-center justify-center rounded-lg border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-white/5 w-8 h-8 text-[12px] transition-all hover:bg-zinc-100 dark:hover:bg-white/10"
+            title="Configuración y Telegram"
+          >
+            ⚙️
+          </button>
           <button
             onClick={() => setShowRules(true)}
             className="flex items-center gap-1.5 rounded-lg border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-white/5 px-3 py-1.5 text-[12px] font-medium text-zinc-600 dark:text-zinc-300 transition-all hover:bg-zinc-100 dark:hover:bg-white/10"
@@ -104,14 +118,37 @@ export function Dashboard() {
 
       {showModal && <AddRecordModal onClose={() => setShowModal(false)} />}
       {showRules && <RulesModal onClose={() => setShowRules(false)} />}
+      {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
     </div>
+  );
+}
+
+function DashboardApp() {
+  const { user, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-zinc-50 dark:bg-[#09090b]">
+        <p className="animate-pulse text-sm text-zinc-400">Autenticando...</p>
+      </div>
+    );
+  }
+
+  if (!user && !DEMO_MODE) {
+    return <Login />;
+  }
+
+  return (
+    <CustomCategoriesProvider>
+      <Dashboard />
+    </CustomCategoriesProvider>
   );
 }
 
 export function DashboardWithProviders() {
   return (
-    <CustomCategoriesProvider>
-      <Dashboard />
-    </CustomCategoriesProvider>
+    <AuthProvider>
+      <DashboardApp />
+    </AuthProvider>
   );
 }
