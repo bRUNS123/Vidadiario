@@ -63,21 +63,6 @@ export function WeeklyPanel({ records }: WeeklyPanelProps) {
         </div>
       </div>
 
-      <style jsx>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(161, 161, 170, 0.2);
-          border-radius: 10px;
-        }
-        .custom-scrollbar:hover::-webkit-scrollbar-thumb {
-          background: rgba(161, 161, 170, 0.4);
-        }
-      `}</style>
     </div>
   );
 }
