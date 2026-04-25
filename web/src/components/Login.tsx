@@ -3,7 +3,7 @@
 import { useAuth } from '@/lib/auth-context';
 
 export function Login() {
-  const { signInWithGoogle } = useAuth();
+  const { signInWithGoogle, error } = useAuth();
 
   return (
     <div className="flex h-screen flex-col items-center justify-center bg-zinc-50 dark:bg-[#09090b] px-4">
@@ -41,6 +41,16 @@ export function Login() {
           </svg>
           Continuar con Google
         </button>
+
+        {error && (
+          <div className="mt-4 rounded-xl bg-red-50 dark:bg-red-500/10 p-3 text-[12px] text-red-600 dark:text-red-400 border border-red-100 dark:border-red-500/20 text-center">
+            {error.includes('unauthorized-domain') 
+              ? 'Error: Este dominio no está autorizado. Ve a Firebase Console > Authentication > Settings > Authorized domains y añade esta URL.' 
+              : error.includes('popup-closed-by-user')
+              ? 'Ventana cerrada antes de terminar el inicio de sesión.'
+              : error}
+          </div>
+        )}
       </div>
     </div>
   );
