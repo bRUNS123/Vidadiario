@@ -16,6 +16,7 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
   const [saving, setSaving] = useState(false);
   const [migrating, setMigrating] = useState(false);
   const [initializing, setInitializing] = useState(false);
+  const [reorganizing, setReorganizing] = useState(false);
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -130,6 +131,92 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
     }
   }
 
+  async function handleRetroactiveRecategorize() {
+    if (!user) return;
+    if (!window.confirm('¿Quieres reorganizar tus registros antiguos para que usen las nuevas categorías (Líquidos, Gaming, etc)? Esto afectará a todo tu historial.')) return;
+
+    setReorganizing(true);
+    setMessage('⏳ Reorganizando historial...');
+
+    try {
+      // 1. Obtener las categorías personalizadas actuales para mapear IDs
+      const catSnap = await getDocs(query(collection(db, 'categorias'), where('userId', '==', user.uid)));
+      const cats: Record<string, string> = {}; // label -> id
+      catSnap.forEach(d => {
+        cats[d.data().label.toLowerCase()] = d.id;
+      });
+
+      const liqId = cats['líquidos'];
+      const gamId = cats['gaming'];
+      const aseId = cats['aseo'];
+      const comId = cats['comida'];
+
+      if (!liqId && !gamId && !aseId && !comId) {
+        throw new Error('Primero debes inicializar las categorías recomendadas.');
+      }
+
+      // 2. Obtener registros confirmados
+      const regSnap = await getDocs(query(collection(db, 'registros'), where('userId', '==', user.uid)));
+      const batch = writeBatch(db);
+      let count = 0;
+
+      regSnap.forEach((d) => {
+        const data = d.data();
+        const text = (data.rawText || '').toLowerCase();
+        const desc = (data.parsedData?.descripcion || '').toLowerCase();
+        const fullText = text + ' ' + desc;
+
+        let newCat = data.category;
+        let newSub = data.subcategory;
+
+        // Lógica de mapeo
+        if (data.category === 'agua' && liqId) {
+          newCat = liqId;
+          newSub = 'Agua';
+        } else if (data.category === 'ocio' && gamId) {
+          newCat = gamId;
+          if (fullText.includes('hots')) newSub = 'Hots';
+          else if (fullText.includes('lol')) newSub = 'LoL';
+          else if (fullText.includes('steam')) newSub = 'Steam';
+          else if (fullText.includes('youtube')) newSub = 'YouTube';
+          else newSub = 'Steam'; // Default for gaming if unknown
+        } else if (data.category === 'bano' && aseId) {
+          newCat = aseId;
+          if (fullText.includes('ducha')) newSub = 'Ducha';
+          else if (fullText.includes('dientes')) newSub = 'Lavar Dientes';
+          else if (data.parsedData?.tipo === 'caca') newSub = 'Baño';
+          else if (data.parsedData?.tipo === 'pis') newSub = 'Baño';
+          else newSub = 'Baño';
+        } else if (data.category === 'alimentacion' && comId) {
+          newCat = comId;
+          if (fullText.includes('desayuno')) newSub = 'Desayuno';
+          else if (fullText.includes('almuerzo') || fullText.includes('comer')) newSub = 'Almuerzo';
+          else if (fullText.includes('cena')) newSub = 'Cena';
+          else newSub = 'Almuerzo';
+        }
+
+        if (newCat !== data.category || newSub !== data.subcategory) {
+          batch.update(d.ref, { category: newCat, subcategory: newSub });
+          count++;
+        }
+      });
+
+      if (count > 0) {
+        await batch.commit();
+        setMessage(`✅ ¡Historial reorganizado! Se actualizaron ${count} registros.`);
+      } else {
+        setMessage('ℹ️ No se encontraron registros que necesiten reorganización.');
+      }
+      
+      setTimeout(() => window.location.reload(), 3000);
+    } catch (err: any) {
+      console.error(err);
+      setMessage(`❌ Error: ${err.message}`);
+    } finally {
+      setReorganizing(false);
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 backdrop-blur-sm">
       <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-xl dark:bg-zinc-900 border border-zinc-200 dark:border-white/10">
@@ -227,6 +314,14 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
                 className="w-full rounded-lg bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 px-4 py-2.5 text-sm font-medium text-zinc-900 dark:text-white transition-all hover:bg-zinc-200 dark:hover:bg-white/10 active:scale-95 disabled:opacity-50"
               >
                 {initializing ? 'Creando...' : 'Inicializar Categorías Recomendadas'}
+              </button>
+              
+              <button
+                onClick={handleRetroactiveRecategorize}
+                disabled={reorganizing || initializing}
+                className="w-full rounded-lg bg-indigo-500/10 border border-indigo-500/20 px-4 py-2.5 text-sm font-medium text-indigo-600 dark:text-indigo-400 transition-all hover:bg-indigo-500/20 active:scale-95 disabled:opacity-50"
+              >
+                {reorganizing ? 'Reorganizando...' : 'Reagrupar Historial Antiguo'}
               </button>
             </div>
             
