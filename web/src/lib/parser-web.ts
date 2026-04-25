@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { askGemini } from '@/app/actions';
 
 export type Category = 'agua' | 'actividad' | 'alimentacion' | 'medicina' | 'ocio' | 'agenda' | 'bano' | 'unknown';export interface ParsedData {
   nombre?: string;
@@ -118,12 +118,9 @@ export async function parseMessage(
       parsedData = exact.parsedData || {};
     }
 
-    // 2. AI Fallback (if configured)
-    if (!category && process.env.GEMINI_API_KEY) {
+    // 2. AI Fallback
+    if (!category) {
       try {
-        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-        
         const prompt = `Analyze this user log message: "${trimmed}".
 Categorize it strictly into one of: agua, actividad, alimentacion, medicina, ocio, agenda, bano, unknown.
 Return ONLY raw JSON, do NOT wrap in markdown.
@@ -145,9 +142,9 @@ Available fields to extract depending on category:
 }
 Reference these user-defined rules to infer their specific terminology mapping: ${JSON.stringify(aliases)}.`;
 
-        const result = await model.generateContent(prompt);
-        const responseText = result.response.text().replace(/```json/i, '').replace(/```/i, '').trim();
-        const aiParsed = JSON.parse(responseText);
+        const responseText = await askGemini(prompt);
+        const cleanText = responseText.replace(/```json/i, '').replace(/```/i, '').trim();
+        const aiParsed = JSON.parse(cleanText);
         
         if (aiParsed?.category && aiParsed.category !== 'unknown') {
           category = aiParsed.category;

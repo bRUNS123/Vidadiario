@@ -1,5 +1,10 @@
 import { DiarioRecord } from '@/lib/types';
 import { RecordCard } from './RecordCard';
+import { useState } from 'react';
+import { parseMessage } from '@/lib/parser-web';
+import { collection, addDoc, serverTimestamp, getDocs, query, where } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useAuth } from '@/lib/auth-context';
 
 interface InboxPanelProps {
   records: DiarioRecord[];
@@ -7,6 +12,37 @@ interface InboxPanelProps {
 }
 
 export function InboxPanel({ records, onAdd }: InboxPanelProps) {
+  const { user } = useAuth();
+  const [quickText, setQuickText] = useState('');
+  const [isParsing, setIsParsing] = useState(false);
+
+  async function handleQuickAdd(e: React.FormEvent) {
+    e.preventDefault();
+    if (!quickText.trim() || !user) return;
+
+    setIsParsing(true);
+    try {
+      const getAliases = async () => {
+        const snap = await getDocs(query(collection(db, 'aliasMappings'), where('userId', '==', user.uid)));
+        return snap.docs.map(d => d.data());
+      };
+
+      const parsed = await parseMessage(quickText, { getAliases }, user.uid);
+      if (parsed) {
+        await addDoc(collection(db, 'registros'), {
+          ...parsed,
+          createdAt: serverTimestamp(),
+        });
+        setQuickText('');
+      }
+    } catch (error) {
+      console.error('Error parsing text:', error);
+      alert('Error procesando el mensaje');
+    } finally {
+      setIsParsing(false);
+    }
+  }
+
   return (
     <div className="flex w-[360px] flex-shrink-0 flex-col">
       {/* Header */}
@@ -51,6 +87,27 @@ export function InboxPanel({ records, onAdd }: InboxPanelProps) {
         ) : (
           records.map((record) => <RecordCard key={record.id} record={record} pending />)
         )}
+      </div>
+
+      {/* Quick Add Bar */}
+      <div className="border-t border-zinc-200 dark:border-white/5 bg-white dark:bg-zinc-950 p-3">
+        <form onSubmit={handleQuickAdd} className="relative flex items-center">
+          <input
+            type="text"
+            value={quickText}
+            onChange={(e) => setQuickText(e.target.value)}
+            disabled={isParsing}
+            placeholder="Escribe como en Telegram..."
+            className="w-full rounded-full border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-white/5 py-2 pl-4 pr-10 text-[12px] text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:border-blue-400 disabled:opacity-50"
+          />
+          <button
+            type="submit"
+            disabled={!quickText.trim() || isParsing}
+            className="absolute right-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-blue-500 text-white transition-all hover:bg-blue-600 disabled:opacity-50"
+          >
+            {isParsing ? '...' : '↑'}
+          </button>
+        </form>
       </div>
     </div>
   );
