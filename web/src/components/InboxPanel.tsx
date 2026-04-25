@@ -29,8 +29,11 @@ export function InboxPanel({ records, onAdd }: InboxPanelProps) {
 
       const parsed = await parseMessage(quickText, { getAliases }, user.uid);
       if (parsed) {
+        // Remove undefined values for Firestore
+        const cleanData = JSON.parse(JSON.stringify(parsed));
+        
         await addDoc(collection(db, 'registros'), {
-          ...parsed,
+          ...cleanData,
           createdAt: serverTimestamp(),
         });
         setQuickText('');
