@@ -1,6 +1,6 @@
 'use client';
 
-import { BuiltinCategory, Category, ParsedData, ParsedRecord } from './types';
+import { BuiltinCategory, Category, ParsedData, DiarioRecord } from './types';
 
 /** Helper to call Gemini AI */
 async function askGemini(prompt: string) {
@@ -31,7 +31,7 @@ export async function parseMessage(
   },
   userId?: string,
   messageId?: number
-): Promise<ParsedRecord | null> {
+): Promise<Partial<DiarioRecord> | null> {
   const trimmed = text.trim();
   const notificar = trimmed.startsWith('!');
   const isCommand = trimmed.startsWith('+') || trimmed.startsWith('!');
