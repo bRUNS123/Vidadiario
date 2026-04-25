@@ -84,7 +84,8 @@ export interface DiarioRecord {
   confirmedAt?: { seconds: number; nanoseconds: number };
   calendarEventId?: string;
   subcategory?: string;
-  userId?: string;
+  userId?: string,
+  telegramMessageId?: number;
 }
 
 export const CATEGORY_CONFIG: Record<
