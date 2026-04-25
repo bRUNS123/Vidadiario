@@ -21,9 +21,10 @@ export interface ParsedData {
   dosis?: string;
   actividad?: string;
   minutos?: number;
-  duracion?: number;   // minutos de duración para categorías sin campo propio
+  duracion?: number;
   evento?: string;
   hora?: string;
+  subcategory?: string;
   tipo?: 'pis' | 'caca' | 'ducha' | 'tina';
   [key: string]: any;
 }
@@ -82,6 +83,7 @@ export interface DiarioRecord {
   createdAt: { seconds: number; nanoseconds: number };
   confirmedAt?: { seconds: number; nanoseconds: number };
   calendarEventId?: string;
+  subcategory?: string;
   userId?: string;
 }
 

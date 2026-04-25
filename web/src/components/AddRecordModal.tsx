@@ -60,6 +60,7 @@ export function AddRecordModal({ onClose }: AddRecordModalProps) {
 
   const [step, setStep] = useState<Step>('select');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<ParsedData>>({});
   const [notificar, setNotificar] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -74,10 +75,12 @@ export function AddRecordModal({ onClose }: AddRecordModalProps) {
   const [newLabel, setNewLabel] = useState('');
   const [newColor, setNewColor] = useState('#3b82f6'); // Default to blue instead of gray
   const [newHasDuration, setNewHasDuration] = useState(false);
+  const [newSubcategories, setNewSubcategories] = useState('');
   const [creating, setCreating] = useState(false);
 
   function pickCategory(catId: string) {
     setSelectedCategory(catId);
+    setSelectedSubcategory(null);
     setFormData(BUILTIN_DEFAULTS[catId] ?? {});
     setNotificar(false);
     setHasDuration(false);
@@ -105,7 +108,8 @@ export function AddRecordModal({ onClose }: AddRecordModalProps) {
     if (!newLabel.trim()) return;
     setCreating(true);
     try {
-      const id = await createCategory(newLabel.trim(), newEmoji, newColor, newHasDuration);
+      const subs = newSubcategories.split(',').map(s => s.trim()).filter(s => s.length > 0);
+      const id = await createCategory(newLabel.trim(), newEmoji, newColor, newHasDuration, [], subs);
       pickCategory(id);
     } catch (err) {
       console.error(err);
@@ -122,6 +126,7 @@ export function AddRecordModal({ onClose }: AddRecordModalProps) {
       await addDoc(collection(db, 'registros'), {
         userId: user.uid,
         category: selectedCategory,
+        subcategory: selectedSubcategory || formData.tipo || null,
         rawText: '',
         parsedData: { ...formData, ...extraParsed },
         notificar: selectedCategory === 'agenda' && notificar,
@@ -308,6 +313,19 @@ export function AddRecordModal({ onClose }: AddRecordModalProps) {
                 <Toggle on={newHasDuration} />
               </div>
 
+              {/* Subcategories input */}
+              <div>
+                <label className="mb-1 block text-[11px] text-zinc-500 dark:text-zinc-400">Subcategorías (opcional)</label>
+                <input
+                  type="text"
+                  value={newSubcategories}
+                  onChange={(e) => setNewSubcategories(e.target.value)}
+                  placeholder="Ej: Pis, Caca, Ducha (separadas por comas)"
+                  className="w-full rounded-xl border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-white/5 px-3 py-2.5 text-sm text-zinc-900 dark:text-white outline-none placeholder:text-zinc-400 focus:border-zinc-400 dark:focus:border-white/25"
+                />
+                <p className="mt-1 text-[10px] text-zinc-400">Permite elegir opciones rápidas al crear el registro.</p>
+              </div>
+
               {/* Preview */}
               <div
                 className="flex items-center gap-2 rounded-xl border px-3 py-2"
@@ -339,6 +357,39 @@ export function AddRecordModal({ onClose }: AddRecordModalProps) {
               >
                 ← Cambiar categoría
               </button>
+
+              {/* Subcategories Selector */}
+              {(() => {
+                const customCat = customCategories.find(c => c.id === selectedCategory);
+                const subcategories = customCat?.subcategories || [];
+                
+                // For bano, we use the existing fieldDef logic below, but we could also unify it here.
+                // Let's keep it separate for now to not break bano's toggle.
+                
+                if (subcategories.length === 0) return null;
+
+                return (
+                  <div>
+                    <label className="mb-1.5 block text-[11px] text-zinc-500 dark:text-zinc-400">Selecciona Subcategoría</label>
+                    <div className="flex flex-wrap gap-2">
+                      {subcategories.map((sub) => (
+                        <button
+                          key={sub}
+                          onClick={() => setSelectedSubcategory(selectedSubcategory === sub ? null : sub)}
+                          className={`rounded-xl px-4 py-2 text-[12px] font-medium transition-all ${
+                            selectedSubcategory === sub 
+                              ? 'text-white' 
+                              : 'bg-zinc-100 dark:bg-white/5 text-zinc-600 dark:text-zinc-300'
+                          }`}
+                          style={selectedSubcategory === sub ? { backgroundColor: cfg.color } : undefined}
+                        >
+                          {sub}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
 
               {fields.map((field) =>
                 field.type === 'toggle' && field.options ? (

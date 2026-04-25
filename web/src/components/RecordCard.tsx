@@ -148,6 +148,12 @@ export function RecordCard({ record, pending = false }: RecordCardProps) {
               style={config.isCustom ? { color: config.color, filter: 'brightness(1.2)' } : undefined}
             >
               {config.label}
+              {record.subcategory && (
+                <>
+                  <span className="mx-1 text-[10px] text-zinc-300 dark:text-zinc-700">•</span>
+                  <span className="text-zinc-500 dark:text-zinc-400 font-medium">{record.subcategory}</span>
+                </>
+              )}
             </p>
             <p className="mt-0.5 truncate text-sm font-medium text-zinc-900 dark:text-white">
               {formatSummary(record)}

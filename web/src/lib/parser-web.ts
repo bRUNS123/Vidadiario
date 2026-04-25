@@ -26,7 +26,10 @@ export interface ParsedRecord {
 
 export async function parseMessage(
   text: string,
-  dbParams?: { getAliases: () => Promise<any[]> },
+  dbParams?: { 
+    getAliases: () => Promise<any[]>,
+    getCategories?: () => Promise<any[]>
+  },
   userId?: string,
   messageId?: number
 ): Promise<ParsedRecord | null> {
@@ -107,8 +110,12 @@ export async function parseMessage(
     const rawLower = trimmed.toLowerCase();
     
     let aliases: any[] = [];
+    let customCats: any[] = [];
     try {
       aliases = await dbParams.getAliases();
+      if (dbParams.getCategories) {
+        customCats = await dbParams.getCategories();
+      }
     } catch (e) {}
 
     // 1. Exact match
@@ -127,6 +134,7 @@ Return ONLY raw JSON, do NOT wrap in markdown.
 Available fields to extract depending on category:
 {
   "category": "...",
+  "subcategory": "string",
   "parsedData": {
     "cantidad": number,
     "unidad": "ml",
@@ -137,9 +145,12 @@ Available fields to extract depending on category:
     "actividad": "string",
     "evento": "string",
     "hora": "HH:MM",
-    "tipo": "pis" | "caca"
+    "tipo": "pis" | "caca" | "ducha"
   }
 }
+If the category (builtin or custom) has subcategories, fill 'subcategory'.
+Custom categories available for this user: ${JSON.stringify(customCats.map(c => ({ id: c.id, label: c.label, subcategories: c.subcategories || [] })))}.
+Special case 'bano': subcategories are [pis, caca, ducha, tina, cepillo].
 Reference these user-defined rules to infer their specific terminology mapping: ${JSON.stringify(aliases)}.`;
 
         const responseText = await askGemini(prompt);
@@ -149,6 +160,9 @@ Reference these user-defined rules to infer their specific terminology mapping: 
         if (aiParsed?.category && aiParsed.category !== 'unknown') {
           category = aiParsed.category;
           parsedData = aiParsed.parsedData || {};
+          if (aiParsed.subcategory) {
+            (parsedData as any).subcategory = aiParsed.subcategory;
+          }
         }
       } catch (err) {
         console.error("AI parse failed:", err);
@@ -232,6 +246,7 @@ Reference these user-defined rules to infer their specific terminology mapping: 
     parsedData,
     notificar,
     status: 'pending',
+    subcategory: parsedData.subcategory || (parsedData as any).tipo || null,
     userId,
     telegramMessageId: messageId,
   };

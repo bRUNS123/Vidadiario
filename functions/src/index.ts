@@ -14,6 +14,7 @@ const EMOJI: Record<string, string> = {
   medicina: '💊',
   ocio: '🎮',
   agenda: '📅',
+  bano: '🧼',
 };
 
 // Register webhook: https://api.telegram.org/bot{TOKEN}/setWebhook?url={CLOUD_FUNCTION_URL}/telegramWebhook

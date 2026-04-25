@@ -13,6 +13,7 @@ export interface CustomCategory {
   color: string;
   hasDuration: boolean;
   fields?: FieldDef[];
+  subcategories?: string[];
 }
 
 export interface CatConfig {
@@ -43,7 +44,7 @@ const FALLBACK: CatConfig = {
 
 interface ContextValue {
   customCategories: CustomCategory[];
-  createCategory: (label: string, emoji: string, color: string, hasDuration: boolean, fields?: FieldDef[]) => Promise<string>;
+  createCategory: (label: string, emoji: string, color: string, hasDuration: boolean, fields?: FieldDef[], subcategories?: string[]) => Promise<string>;
   getCatConfig: (category: string) => CatConfig;
 }
 
@@ -70,7 +71,14 @@ export function CustomCategoriesProvider({ children }: { children: ReactNode }) 
     return unsub;
   }, [user]);
 
-  async function createCategory(label: string, emoji: string, color: string, hasDuration: boolean, fields: FieldDef[] = []): Promise<string> {
+  async function createCategory(
+    label: string, 
+    emoji: string, 
+    color: string, 
+    hasDuration: boolean, 
+    fields: FieldDef[] = [],
+    subcategories: string[] = []
+  ): Promise<string> {
     if (!user) throw new Error("Usuario no autenticado");
     const ref = await addDoc(collection(db, 'categorias'), {
       label,
@@ -78,6 +86,7 @@ export function CustomCategoriesProvider({ children }: { children: ReactNode }) 
       color,
       hasDuration,
       fields,
+      subcategories,
       userId: user.uid,
       createdAt: serverTimestamp(),
     });

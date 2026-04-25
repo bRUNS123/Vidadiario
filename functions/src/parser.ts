@@ -130,7 +130,12 @@ export async function parseMessage(
           userId ? db.collection('categorias').where('userId', '==', userId).get() : db.collection('categorias').get()
         ]);
         aliases = allAliasesFn.docs.map(d => d.data());
-        customCategories = allCatsFn.docs.map(d => ({ id: d.id, label: d.data().label, hasDuration: d.data().hasDuration }));
+        customCategories = allCatsFn.docs.map(d => ({ 
+          id: d.id, 
+          label: d.data().label, 
+          hasDuration: d.data().hasDuration,
+          subcategories: d.data().subcategories || []
+        }));
       } catch (e) {
         console.error('Error fetching context:', e);
       }
@@ -151,6 +156,7 @@ Return ONLY raw JSON, do NOT wrap in markdown.
 Expected JSON format:
 {
   "category": "category_id_or_builtin_name",
+  "subcategory": "string_matching_one_of_subcategories_if_any",
   "parsedData": {
     "cantidad": number,
     "unidad": "ml",
@@ -161,10 +167,12 @@ Expected JSON format:
     "actividad": "string",
     "evento": "string",
     "hora": "HH:MM",
-    "tipo": "pis" | "caca",
+    "tipo": "pis" | "caca" | "ducha",
     "duracion": number
   }
 }
+If the identified category (like 'bano' or a custom one) has subcategories or specific 'tipo' options, fill 'subcategory' (and 'tipo' if builtin 'bano').
+Special case 'bano': subcategories are [pis, caca, ducha, tina, cepillo].
 If selecting a custom category, use its 'id' as the 'category' value, and extract any relevant information from the message into 'parsedData.descripcion'. If the custom category has hasDuration=true, also extract 'parsedData.duracion' in minutes if applicable.
 Reference these user-defined rules to infer their specific terminology mapping: ${JSON.stringify(aliases)}.`;
 
@@ -175,6 +183,9 @@ Reference these user-defined rules to infer their specific terminology mapping: 
           if (aiParsed?.category && aiParsed.category !== 'unknown') {
             category = aiParsed.category;
             parsedData = aiParsed.parsedData || {};
+            if (aiParsed.subcategory) {
+              (parsedData as any).subcategory = aiParsed.subcategory;
+            }
           }
         } catch (err) {
           console.error("AI parse failed:", err);
@@ -233,6 +244,7 @@ Reference these user-defined rules to infer their specific terminology mapping: 
     notificar,
     status: 'pending',
     createdAt: Timestamp.now(),
+    subcategory: parsedData.subcategory || (parsedData as any).tipo || null,
     userId,
     telegramMessageId: messageId,
   };
