@@ -57,9 +57,10 @@ export async function POST(req: NextRequest) {
       createdAt: serverTimestamp(),
     });
 
+    const emoji = parsed.category ? (EMOJI[parsed.category] || '📝') : '📝';
     await sendMessage(
       message.chat.id,
-      `${EMOJI[parsed.category] || '📝'} Registrado en el inbox. Pendiente de aprobación.`
+      `${emoji} Registrado en el inbox. Pendiente de aprobación.`
     );
 
     return NextResponse.json({ ok: true });
