@@ -32,7 +32,7 @@ export function FeedbackModal({ onClose }: FeedbackModalProps) {
       try {
         const q = query(
           collection(db, 'registros'), 
-          where('userId', '==', user.uid),
+          where('userId', '==', user!.uid),
           where('status', '==', 'confirmed'),
           orderBy('createdAt', 'desc')
         );
@@ -61,7 +61,7 @@ export function FeedbackModal({ onClose }: FeedbackModalProps) {
         // Fetch PENDING feedback items
         const feedbackQuery = query(
           collection(db, 'registros'),
-          where('userId', '==', user.uid),
+          where('userId', '==', user!.uid),
           where('status', '==', 'pending')
         );
         const fbSnap = await getDocs(feedbackQuery);
