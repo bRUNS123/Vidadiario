@@ -15,6 +15,7 @@ export interface ParsedData {
   hora?: string;
   tipo?: 'pis' | 'caca';
   duracion?: number;
+  subcategory?: string;
 }
 
 export interface DiarioRecord {
@@ -27,6 +28,7 @@ export interface DiarioRecord {
   confirmedAt?: Timestamp;
   userId?: string;
   telegramMessageId?: number;
+  subcategory?: string | null;
 }
 
 export async function parseMessage(

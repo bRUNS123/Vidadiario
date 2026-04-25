@@ -59,6 +59,7 @@ export function RecordCard({ record, pending = false }: RecordCardProps) {
   const [dismissed, setDismissed] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [editCategory, setEditCategory] = useState<Category>(record.category as Category);
+  const [editTime, setEditTime] = useState<string>('');
   const [saveAsRule, setSaveAsRule] = useState(false);
   const { user } = useAuth();
 
@@ -69,13 +70,17 @@ export function RecordCard({ record, pending = false }: RecordCardProps) {
   function startEdit() {
     setEditData({ ...record.parsedData });
     setEditCategory(record.category as Category);
+    const date = record.createdAt ? new Date(record.createdAt.seconds * 1000) : new Date();
+    setEditTime(new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16));
     setEditing(true);
   }
 
   async function saveEdit() {
+    const ts = Timestamp.fromDate(new Date(editTime));
     await updateDoc(doc(db, 'registros', record.id), {
       category: editCategory,
       parsedData: { ...record.parsedData, ...editData },
+      createdAt: ts,
     });
     setEditing(false);
   }
@@ -85,9 +90,23 @@ export function RecordCard({ record, pending = false }: RecordCardProps) {
     try {
       const finalCategory = editing ? editCategory : record.category;
       const finalParsedData = editing ? { ...record.parsedData, ...editData } : record.parsedData;
+      const finalTime = editing ? Timestamp.fromDate(new Date(editTime)) : record.createdAt;
 
-      if (editing) await saveEdit();
-      
+      if (editing) {
+        await updateDoc(doc(db, 'registros', record.id), {
+          category: finalCategory,
+          parsedData: finalParsedData,
+          createdAt: finalTime,
+          status: 'confirmed',
+          confirmedAt: serverTimestamp(),
+        });
+      } else {
+        await updateDoc(doc(db, 'registros', record.id), {
+          status: 'confirmed',
+          confirmedAt: serverTimestamp(),
+        });
+      }
+
       if (saveAsRule && record.rawText) {
         const aliasId = record.rawText.toLowerCase().trim().replace(/[^a-z0-9áéíóúüñ\s]/g, '').replace(/\s+/g, '_');
         await setDoc(doc(db, 'aliasMappings', aliasId), {
@@ -264,6 +283,19 @@ export function RecordCard({ record, pending = false }: RecordCardProps) {
               </div>
             )
           )}
+
+            {/* Time Editor */}
+            <div className="flex items-center gap-2 border-t border-zinc-100 dark:border-white/5 pt-2 mt-2">
+              <label className="w-28 flex-shrink-0 text-[11px] text-zinc-400 dark:text-zinc-500">
+                Fecha/Hora
+              </label>
+              <input
+                type="datetime-local"
+                value={editTime}
+                onChange={(e) => setEditTime(e.target.value)}
+                className="flex-1 rounded-md border border-zinc-200 dark:border-white/15 bg-white dark:bg-zinc-800 px-2 py-1 text-[13px] text-zinc-900 dark:text-white outline-none [color-scheme:light] dark:[color-scheme:dark]"
+              />
+            </div>
           </div>
           )}
 
