@@ -185,7 +185,7 @@ Rules context: ${JSON.stringify(aliases)}.`;
       for (const alias of aliases) {
         if (!alias.text) continue;
         const aliasTokens = alias.text.replace(/\d+/g, '').split(/\s+/);
-        const matches = tokens.some(t => aliasTokens.some(a => a === t || (t.length >= 3 && a.startsWith(t))));
+        const matches = tokens.some((t: string) => aliasTokens.some((a: string) => a === t || (t.length >= 3 && a.startsWith(t))));
         if (matches) {
           category = alias.category;
           parsedData = alias.parsedData || {};
@@ -195,10 +195,10 @@ Rules context: ${JSON.stringify(aliases)}.`;
       
       // Basic keyword fallbacks
       if (!category) {
-        if (tokens.some(t => 'agua'.startsWith(t) || t === 'h2o')) {
+        if (tokens.some((t: string) => 'agua'.startsWith(t) || t === 'h2o')) {
           category = 'agua';
           if (firstNum) parsedData.cantidad = firstNum;
-        } else if (tokens.some(t => t.startsWith('jug') || t === 'hots')) {
+        } else if (tokens.some((t: string) => t.startsWith('jug') || t === 'hots')) {
           category = 'ocio';
           parsedData = { actividad: textOnly, minutos: firstNum };
         }
