@@ -93,7 +93,9 @@ export function InboxPanel({ records, onAdd }: InboxPanelProps) {
             </div>
           </div>
         ) : (
-          records.map((record) => <RecordCard key={record.id} record={record} pending />)
+          records
+            .filter(r => r.category !== 'feedback' && r.category !== 'Feedback' && !r.category.toLowerCase().includes('feedback'))
+            .map((record) => <RecordCard key={record.id} record={record} pending />)
         )}
       </div>
 

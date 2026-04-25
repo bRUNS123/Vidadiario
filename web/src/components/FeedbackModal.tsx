@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { collection, query, where, getDocs, limit, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs, limit, orderBy, updateDoc, doc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/lib/auth-context';
 import { DiarioRecord } from '@/lib/types';
@@ -18,7 +18,11 @@ export function FeedbackModal({ onClose }: FeedbackModalProps) {
     waterTotal: 0,
     streak: 0,
   });
+  const [feedbackItems, setFeedbackItems] = useState<DiarioRecord[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const { customCategories } = useCustomCategories();
+  const feedbackCat = customCategories.find(c => c.label.toLowerCase() === 'feedback');
 
   useEffect(() => {
     if (!user) return;
@@ -50,8 +54,21 @@ export function FeedbackModal({ onClose }: FeedbackModalProps) {
           totalRecords: records.length,
           topCategory: top,
           waterTotal: water,
-          streak: 5, // Placeholder for now
+          streak: 5,
         });
+
+        // Fetch PENDING feedback items
+        const feedbackQuery = query(
+          collection(db, 'registros'),
+          where('userId', '==', user.uid),
+          where('status', '==', 'pending')
+        );
+        const fbSnap = await getDocs(feedbackQuery);
+        const fbItems = fbSnap.docs
+          .map(d => ({ id: d.id, ...d.data() } as DiarioRecord))
+          .filter(r => r.category === 'feedback' || r.category === feedbackCat?.id);
+        
+        setFeedbackItems(fbItems);
       } catch (err) {
         console.error(err);
       } finally {
@@ -60,7 +77,30 @@ export function FeedbackModal({ onClose }: FeedbackModalProps) {
     }
 
     fetchStats();
-  }, [user]);
+  }, [user, feedbackCat]);
+
+  async function handleApprove(record: DiarioRecord) {
+    if (!user) return;
+    try {
+      await updateDoc(doc(db, 'registros', record.id), {
+        status: 'confirmed',
+        confirmedAt: serverTimestamp(),
+      });
+      setFeedbackItems(prev => prev.filter(r => r.id !== record.id));
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (!user) return;
+    try {
+      await deleteDoc(doc(db, 'registros', id));
+      setFeedbackItems(prev => prev.filter(r => r.id !== id));
+    } catch (err) {
+      console.error(err);
+    }
+  }
 
   return (
     <div
@@ -125,16 +165,43 @@ export function FeedbackModal({ onClose }: FeedbackModalProps) {
                 </p>
               </div>
 
-              {/* Quick Feedback Form (Simple placeholder) */}
-              <div className="space-y-3 pt-4">
-                <h4 className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Tu Feedback para el sistema</h4>
-                <div className="flex gap-2">
-                  <input 
-                    type="text" 
-                    placeholder="¿Alguna sugerencia o bug?" 
-                    className="flex-1 rounded-xl border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-zinc-800 px-4 py-2.5 text-sm outline-none focus:border-indigo-500"
-                  />
-                  <button className="rounded-xl bg-zinc-900 dark:bg-white px-4 text-sm font-bold text-white dark:text-zinc-900">Enviar</button>
+              {/* Feedback Inbox Section */}
+              <div className="space-y-3">
+                <h4 className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider flex items-center justify-between">
+                  <span>📬 Inbox de Feedback</span>
+                  <span className="bg-zinc-100 dark:bg-white/10 px-2 py-0.5 rounded-full text-[9px]">{feedbackItems.length} pendientes</span>
+                </h4>
+                
+                <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                  {feedbackItems.length === 0 ? (
+                    <div className="py-8 text-center border-2 border-dashed border-zinc-100 dark:border-white/5 rounded-2xl">
+                      <p className="text-[11px] text-zinc-400">No hay feedback pendiente de revisión</p>
+                    </div>
+                  ) : (
+                    feedbackItems.map(item => (
+                      <div key={item.id} className="p-3 rounded-xl bg-zinc-50 dark:bg-white/5 border border-zinc-100 dark:border-white/5 flex flex-col gap-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-tight">{item.subcategory || 'General'}</span>
+                          <span className="text-[9px] text-zinc-400">{new Date(item.createdAt.seconds * 1000).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })}</span>
+                        </div>
+                        <p className="text-sm text-zinc-700 dark:text-zinc-200">{item.rawText}</p>
+                        <div className="flex gap-2 mt-1">
+                          <button 
+                            onClick={() => handleApprove(item)}
+                            className="flex-1 py-1.5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-[11px] font-bold rounded-lg hover:opacity-90 transition-all"
+                          >
+                            Aprobar
+                          </button>
+                          <button 
+                            onClick={() => handleDelete(item.id)}
+                            className="px-3 py-1.5 border border-zinc-200 dark:border-white/10 text-zinc-400 text-[11px] rounded-lg hover:text-red-500 hover:border-red-500/20 transition-colors"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             </>
